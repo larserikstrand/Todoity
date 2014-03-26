@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".ListActivity" >
+
+    <TextView android:id="@+id/date_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="5dp"
+        style="?android:listSeparatorTextViewStyle" />
+    
+    <ListView android:id="@+id/list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+    	  android:paddingRight="@dimen/activity_horizontal_margin" />
+    
+    <LinearLayout style="?android:buttonBarStyle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" >
+        
+        <Button android:id="@+id/date_button"
+            style="?android:buttonBarButtonStyle"
+        	android:layout_width="0dp"
+        	android:layout_height="wrap_content"
+        	android:layout_weight="1"
+        	android:paddingTop="5dp"
+        	android:paddingBottom="5dp"
+        	android:text="@string/change_date"
+        	android:textAppearance="?android:textAppearanceSmall"
+        	android:drawableTop="@drawable/ic_content_date" />
+        
+        <Button android:id="@+id/new_task_button"
+            style="?android:buttonBarButtonStyle"
+        	android:layout_width="0dp"
+        	android:layout_height="wrap_content"
+        	android:layout_weight="1"
+        	android:paddingTop="5dp"
+        	android:paddingBottom="5dp"
+        	android:text="@string/new_task"
+        	android:textAppearance="?android:textAppearanceSmall"
+        	android:drawableTop="@drawable/ic_content_new" />
+        
+        <Button android:id="@+id/done_button"
+            style="?android:buttonBarButtonStyle"
+            android:layout_width="0dp"
+        	android:layout_height="wrap_content"
+        	android:layout_weight="1"
+        	android:paddingTop="5dp"
+        	android:paddingBottom="5dp"
+        	android:text="@string/done"
+        	android:textAppearance="?android:textAppearanceSmall"
+        	android:drawableTop="@drawable/ic_navigation_accept" />
+        
+    </LinearLayout>
+    
+</LinearLayout>
