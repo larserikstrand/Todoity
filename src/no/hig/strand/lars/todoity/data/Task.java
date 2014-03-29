@@ -2,6 +2,7 @@ package no.hig.strand.lars.todoity.data;
 
 import java.util.Comparator;
 
+import no.hig.strand.lars.todoity.helpers.Utilities;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -354,17 +355,6 @@ public class Task implements Parcelable {
 			subText += task.getAddress();
 		}
 		return subText;
-	}
-
-	
-	
-	public static class TaskCategoryComparator implements Comparator<Task> {
-		@Override
-		public int compare(Task lhs, Task rhs) {
-			String task1 = lhs.getCategory() + ": " + lhs.getDescription();
-			String task2 = rhs.getCategory() + ": " + rhs.getDescription();
-			return task1.compareTo(task2);
-		}
 	}
 	
 	

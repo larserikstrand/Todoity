@@ -1,34 +1,43 @@
 package no.hig.strand.lars.todoity.fragments;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import no.hig.strand.lars.todoity.R;
 import no.hig.strand.lars.todoity.activities.ListActivity;
+import no.hig.strand.lars.todoity.activities.MainActivity;
 import no.hig.strand.lars.todoity.adapters.TodayListAdapter;
-import no.hig.strand.lars.todoity.data.Constant;
 import no.hig.strand.lars.todoity.data.Task;
+import no.hig.strand.lars.todoity.data.Task.TaskPriorityComparator;
+import no.hig.strand.lars.todoity.helpers.DatabaseUtilities.DeleteTask;
+import no.hig.strand.lars.todoity.helpers.DatabaseUtilities.GetTasksByDateTask;
 import no.hig.strand.lars.todoity.helpers.Utilities;
-import no.hig.strand.lars.todoity.views.DraggableListView;
-import android.app.Activity;
+import no.hig.strand.lars.todoity.helpers.Utilities.OnConfirmListener;
+import no.hig.strand.lars.todoity.views.DynamicListView;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
+import android.view.ActionMode;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
+import android.widget.AbsListView.MultiChoiceModeListener;
 import android.widget.Button;
+import android.widget.ListView;
 import android.widget.ProgressBar;
 
 
 public class TodayFragment extends Fragment {
 	
 	private View mRootView;
-	private DraggableListView mList;
+	private DynamicListView mListView;
 	private TodayListAdapter mAdapter;
 	private ArrayList<Task> mTasks;
-	//private TodayListAdapter mAdapter;
-	private int mSelectedTask;
 	
 	public ProgressBar mProgress;
 	
@@ -38,10 +47,7 @@ public class TodayFragment extends Fragment {
 			Bundle savedInstanceState) {
 		mRootView = inflater.inflate(R.layout.fragment_today, container, false);
 		
-		mTasks = new ArrayList<Task>();
-		mAdapter = new TodayListAdapter(getActivity(), mTasks);
-		mList = (DraggableListView) mRootView.findViewById(R.id.today_list);
-		mList.setAdapter(mAdapter);
+		mListView = (DynamicListView) mRootView.findViewById(R.id.today_list);
 		mProgress = (ProgressBar) mRootView.findViewById(R.id.progressBar);
 		
 		setupUI();
@@ -51,6 +57,14 @@ public class TodayFragment extends Fragment {
 	
 	
 	
+	@Override
+	public void onResume() {
+		update();
+		super.onResume();
+	}
+
+
+
 	private void setupUI() {
 		Button button = (Button) mRootView.findViewById(
 				R.id.today_delete_list_button);
@@ -58,34 +72,24 @@ public class TodayFragment extends Fragment {
 			@Override
 			public void onClick(View v) {
 				// Show dialog to the user asking for confirmation of deletion.
-				/*Utilities.showConfirmDialog(getActivity(), 
-						getString(R.string.confirm), 
-						getString(R.string.delete_list_message), 
-						new Utilities.ConfirmDialogListener() {
-					// The user confirms deletion.
+				String dialogTitle = getString(R.string.delete) + " " + 
+						mTasks.size() + " " + getString(R.string.tasks);
+				String dialogMessage = getString(R.string.delete_list_message1) 
+						+ " " + getString(R.string.today) + " " + 
+						getString(R.string.delete_list_message2);
+				Utilities.showConfirmDialog(getActivity(), dialogTitle, 
+						dialogMessage, getString(R.string.delete), 
+						new OnConfirmListener() {
 					@Override
-					public void PositiveClick(DialogInterface dialog, int id) {
-						String date = Utilities.getTodayDate();
-						new DeleteList(getActivity(), new OnDeletionCallback() {
-							// Task has been deleted. Update UI.
-							@Override
-							public void onDeletionDone() {
-								mTasks.clear();
-								DraggableListView listView = (DraggableListView)
-										mRootView.findViewById(R.id.tasks_list);
-								listView.setAdapter(new TodayListAdapter(
-										getActivity(), mTasks));
-								Button edit = (Button) mRootView
-										.findViewById(R.id.edit_button);
-								Button delete = (Button) mRootView
-										.findViewById(R.id.delete_button);
-								edit.setEnabled(false);
-								delete.setEnabled(false);
-								((MainActivity)getActivity()).updateGeofences();
-							}
-						}).execute(date);
+					public void onConfirm(DialogInterface dialog, int id) {
+						ArrayList<Task> tasks = mTasks;
+						updateList(new ArrayList<Task>());
+						for (Task task : tasks) {
+							new DeleteTask(getActivity(), task).execute();
+						}
+						((MainActivity) getActivity()).updateNeighborFragments();
 					}
-				});*/
+				});
 			}
 		});
 		
@@ -107,36 +111,56 @@ public class TodayFragment extends Fragment {
 		button.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				Intent intent = new Intent(getActivity(), ListActivity.class);
-				if (mTasks.size() > 0) {
-					intent.putExtra(Constant.TASKS_EXTRA, mTasks);
-				}
-				startActivityForResult(intent, Constant.NEW_LIST_REQUEST);
+				startActivity(new Intent(getActivity(), ListActivity.class));
 			}
 		});
-	}
-
-
-
-	@Override
-	public void onActivityResult(int requestCode, int resultCode, Intent data) {
-		switch (requestCode) {
-		case Constant.NEW_LIST_REQUEST:
-			if (resultCode == Activity.RESULT_OK) {
-				ArrayList<Task> tasks = data.getParcelableArrayListExtra(
-						Constant.TASKS_EXTRA);
-				mTasks.clear();
-				mTasks.addAll(tasks);
-				mAdapter.notifyDataSetChanged();
+		
+		mListView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
+		mListView.setMultiChoiceModeListener(new MultiChoiceModeListener() {
+			@Override
+			public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
+				return false;
 			}
-			return;
-		}
-		super.onActivityResult(requestCode, resultCode, data);
+			
+			@Override
+			public void onDestroyActionMode(ActionMode mode) {}
+			
+			@Override
+			public boolean onCreateActionMode(ActionMode mode, Menu menu) {
+				MenuInflater inflater = mode.getMenuInflater();
+				inflater.inflate(R.menu.context, menu);
+				return true;
+			}
+			
+			@Override
+			public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
+				switch (item.getItemId()) {
+				default:
+					return false;
+				}
+			}
+			
+			@Override
+			public void onItemCheckedStateChanged(ActionMode mode, int position,
+					long id, boolean checked) {}
+		});
 	}
 	
 	
 	
+	public void update() {
+		new GetTasksByDateTask(getActivity(), 
+				Utilities.getTodayDate()).execute();
+	}
 	
 	
+	
+	public void updateList(ArrayList<Task> tasks) {
+		Collections.sort(tasks, new TaskPriorityComparator());
+		mTasks = tasks;
+		mAdapter = new TodayListAdapter(getActivity(), mTasks);
+		mListView.setTaskList(mTasks);
+		mListView.setAdapter(mAdapter);
+	}
 
 }

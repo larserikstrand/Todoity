@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import no.hig.strand.lars.todoity.R;
+import no.hig.strand.lars.todoity.activities.MainActivity;
 import no.hig.strand.lars.todoity.data.Task;
-import no.hig.strand.lars.todoity.views.DraggableListView;
+import no.hig.strand.lars.todoity.helpers.DatabaseUtilities;
+import no.hig.strand.lars.todoity.views.DynamicListView;
 import android.content.Context;
 import android.graphics.Paint;
 import android.view.LayoutInflater;
@@ -30,7 +32,68 @@ public class TodayListAdapter extends ArrayAdapter<Task> {
 	
 	private HashMap<Task, Integer> mIdMap = new HashMap<Task, Integer>();
 	
-	private final static int INVALID_ID = -1;
+	private final int INVALID_ID = -1;
+	
+	private OnClickListener mStartPauseListener = new OnClickListener() {
+		@Override
+		public void onClick(View v) {
+			/*LinearLayout layout = (LinearLayout) v.getParent();
+			int position = (Integer) layout.getTag();
+			Task task = mTasks.get(position);
+			String text = ((Button) v).getText().toString();
+			if (text.equals(getString(R.string.start))) {
+				((Button) v).setText(getString(R.string.pause));
+				layout.setBackgroundColor(getResources()
+						.getColor(R.color.lightgreen));
+				startTask(task);
+			} else {
+				((Button) v).setText(getString(R.string.start));
+				layout.setBackgroundResource(0);
+				pauseTask(task);
+			}*/
+		}
+	};
+	
+	private OnCheckedChangeListener mFinishedListener = 
+			new OnCheckedChangeListener() {
+		@Override
+		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+			LinearLayout layout = (LinearLayout) buttonView.getParent();
+			ViewHolder holder = (ViewHolder) layout.getTag();
+			
+			Task task = mTasks.get(holder.position);
+			// When the task is checked and finished.
+			if (isChecked) {
+				task.setFinished(true);
+				holder.startPauseButton.setText(mContext.getString(
+						R.string.start));
+				layout.setBackgroundResource(0);
+				setStrikeThrough(holder, true);
+				holder.startPauseButton.setEnabled(false);
+				//pauseTask(task);
+			} else {
+				task.setFinished(false);
+				//new DatabaseUtilities.UpdateTask(
+				//		getActivity(), task).execute();
+				//new AppEngineUtilities.UpdateTask(
+				//		getActivity(), task).execute();
+				setStrikeThrough(holder, false);
+				holder.startPauseButton.setEnabled(true);
+				//((MainActivity)getActivity()).updateGeofences();
+				//recommend();
+			}
+		}
+	};
+	
+	private OnLongClickListener mDragListener = new OnLongClickListener() {
+		@Override
+		public boolean onLongClick(View v) {
+			DynamicListView listView = (DynamicListView) v
+					.getParent().getParent();
+			listView.startDrag();
+			return true;
+		}
+	};
 	
     
 	public TodayListAdapter(Context context, ArrayList<Task> tasks) {
@@ -99,92 +162,41 @@ public class TodayListAdapter extends ArrayAdapter<Task> {
 		
 		// Color the layout if the task is active
 		if (task.isActive()) {
-			convertView.setBackgroundColor(mContext.getResources()
-					.getColor(R.color.lightgreen));
+			//convertView.setBackgroundColor(mContext.getResources()
+			//		.getColor(R.color.lightgreen));
 			holder.startPauseButton.setText(mContext.getString(R.string.pause));
 		}
-		
-		holder.startPauseButton.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				/*LinearLayout layout = (LinearLayout) v.getParent();
-				int position = (Integer) layout.getTag();
-				Task task = mTasks.get(position);
-				String text = ((Button) v).getText().toString();
-				if (text.equals(getString(R.string.start))) {
-					((Button) v).setText(getString(R.string.pause));
-					layout.setBackgroundColor(getResources()
-							.getColor(R.color.lightgreen));
-					startTask(task);
-				} else {
-					((Button) v).setText(getString(R.string.start));
-					layout.setBackgroundResource(0);
-					pauseTask(task);
-				}*/
-			}
-		});
+		holder.startPauseButton.setOnClickListener(mStartPauseListener);
 		
 		// Cross out the task if it is finished.
 		if (task.isFinished()) {
-			holder.finishedCheck.setOnCheckedChangeListener(null);
 			holder.finishedCheck.setChecked(true);
 			setStrikeThrough(holder, true);
 			holder.startPauseButton.setEnabled(false);
 		}
-		holder.finishedCheck.setOnCheckedChangeListener(
-				new OnCheckedChangeListener() {
-			@Override
-			public void onCheckedChanged(CompoundButton buttonView, 
-					boolean isChecked) {
-				LinearLayout layout = (LinearLayout) buttonView.getParent();
-				ViewHolder holder = (ViewHolder) layout.getTag();
-				
-				Task task = mTasks.get(holder.position);
-				// When the task is checked and finished.
-				if (isChecked) {
-					task.setFinished(true);
-					holder.startPauseButton.setText(mContext.getString(
-							R.string.start));
-					layout.setBackgroundResource(0);
-					setStrikeThrough(holder, true);
-					holder.startPauseButton.setEnabled(false);
-					//pauseTask(task);
-				} else {
-					task.setFinished(false);
-					//new DatabaseUtilities.UpdateTask(
-					//		getActivity(), task).execute();
-					//new AppEngineUtilities.UpdateTask(
-					//		getActivity(), task).execute();
-					setStrikeThrough(holder, false);
-					holder.startPauseButton.setEnabled(true);
-					//((MainActivity)getActivity()).updateGeofences();
-					//recommend();
-				}
-			}
-		});
+		holder.finishedCheck.setOnCheckedChangeListener(mFinishedListener);
 		
 		// Enable drag and drop reordering.
-		holder.dragButton.setOnLongClickListener(new OnLongClickListener() {
-			@Override
-			public boolean onLongClick(View v) {
-				DraggableListView listView = (DraggableListView) v
-						.getParent().getParent();
-				listView.startDrag();
-				return true;
-			}
-		});
+		holder.dragButton.setOnLongClickListener(mDragListener);
 		
 		return convertView;
 	}
 	
 	
 	
-	public void onDragEnd() {
+	@Override
+	public boolean isEnabled(int position) {
+		return true;
+	}
+	
+	
+	
+	public void dragEnded() {
 		for (int i = 0; i < mTasks.size(); i++) {
 			mTasks.get(i).setPriority(i+1);
-			//new DatabaseUtilities.UpdateTask(
-			//		getActivity(), tasks.get(i)).execute();
+			new DatabaseUtilities.UpdateTask(mContext, mTasks.get(i)).execute();
 		}
+		((MainActivity) mContext).updateNeighborFragments();
 	}
 	
 	

@@ -1,11 +1,15 @@
 package no.hig.strand.lars.todoity.activities;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 import no.hig.strand.lars.todoity.R;
 import no.hig.strand.lars.todoity.adapters.ListAdapter;
 import no.hig.strand.lars.todoity.data.Constant;
 import no.hig.strand.lars.todoity.data.Task;
+import no.hig.strand.lars.todoity.data.Task.TaskPriorityComparator;
+import no.hig.strand.lars.todoity.helpers.DatabaseUtilities;
+import no.hig.strand.lars.todoity.helpers.DatabaseUtilities.OnTasksLoadedListener;
 import no.hig.strand.lars.todoity.helpers.DatePickerFragment;
 import no.hig.strand.lars.todoity.helpers.DatePickerFragment.OnDateSetListener;
 import no.hig.strand.lars.todoity.helpers.Utilities;
@@ -21,11 +25,12 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
-public class ListActivity extends FragmentActivity implements OnDateSetListener{
+public class ListActivity extends FragmentActivity implements 
+		OnDateSetListener, OnTasksLoadedListener {
 
 	private ArrayList<Task> mTasks;
 	private ListAdapter mAdapter;
-	private ListView mList;
+	private ListView mListView;
 	private TextView mDate;
 	
 	
@@ -38,18 +43,20 @@ public class ListActivity extends FragmentActivity implements OnDateSetListener{
 		setupActionBar();
 		
 		mDate = (TextView) findViewById(R.id.date_text);
+		mTasks = new ArrayList<Task>();
 		Intent data = getIntent();
-		if (data.hasExtra(Constant.TASKS_EXTRA)) {
-			mTasks = data.getParcelableArrayListExtra(Constant.TASKS_EXTRA);
-		} else {
-			mTasks = new ArrayList<Task>();
-		}
 		if (data.hasExtra(Constant.DATE_EXTRA)) {
 			mDate.setText(data.getStringExtra(Constant.DATE_EXTRA));
 		} else {
 			mDate.setText(Utilities.getTodayDate());
 		}
+		
 		mAdapter = new ListAdapter(this, mTasks);
+		mListView = (ListView) findViewById(R.id.list);
+		mListView.setAdapter(mAdapter);
+		
+		new DatabaseUtilities.GetTasksByDateTask(
+				this, mDate.getText().toString()).execute();
 		
 		setupUI();
 	}
@@ -78,9 +85,6 @@ public class ListActivity extends FragmentActivity implements OnDateSetListener{
 	
 	
 	private void setupUI() {
-		mList = (ListView) findViewById(R.id.list);
-		mList.setAdapter(mAdapter);
-		
 		Button button = (Button) findViewById(R.id.date_button);
 		button.setOnClickListener(new OnClickListener() {
 			@Override
@@ -104,11 +108,6 @@ public class ListActivity extends FragmentActivity implements OnDateSetListener{
 		button.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				if (mTasks.size() > 0) {
-					Intent data = new Intent();
-					data.putExtra(Constant.TASKS_EXTRA, mTasks);
-					setResult(RESULT_OK, data);
-				}
 				finish();
 			}
 		});
@@ -128,8 +127,7 @@ public class ListActivity extends FragmentActivity implements OnDateSetListener{
 				mTasks.add(task);
 				mAdapter.notifyDataSetChanged();
 				
-				//new DatabaseUtilities.SaveTask(this, task).execute();
-				
+				new DatabaseUtilities.SaveTask(this, task).execute();
 			}
 			return;
 		case Constant.EDIT_TASK_REQUEST:
@@ -139,7 +137,7 @@ public class ListActivity extends FragmentActivity implements OnDateSetListener{
 				
 				mTasks.set(position, task);
 				mAdapter.notifyDataSetChanged();
-				//new DatabaseUtilities.UpdateTask(this, task).execute();
+				new DatabaseUtilities.UpdateTask(this, task).execute();
 			}
 			return;
 		}
@@ -150,7 +148,19 @@ public class ListActivity extends FragmentActivity implements OnDateSetListener{
 	
 	@Override
 	public void onDateSet(String date) {
-		mDate.setText(date);
-		// TODO load dates...
+		if (! mDate.getText().toString().equals(date)) {
+			mDate.setText(date);
+			new DatabaseUtilities.GetTasksByDateTask(this, date).execute();
+		}
+	}
+
+
+
+	@Override
+	public void onTasksLoaded(ArrayList<Task> tasks) {
+		Collections.sort(tasks, new TaskPriorityComparator());
+		mTasks.clear();
+		mTasks.addAll(tasks);
+		mAdapter.notifyDataSetChanged();
 	}
 }

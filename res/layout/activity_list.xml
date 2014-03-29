@@ -4,21 +4,26 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:showDividers="middle"
+    android:divider="?android:dividerHorizontal"
+    android:dividerPadding="@dimen/default_divider_padding"
     tools:context=".ListActivity" >
 
     <TextView android:id="@+id/date_text"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="5dp"
-        android:layout_marginBottom="5dp"
-        style="?android:listSeparatorTextViewStyle" />
+        android:layout_height="@dimen/default_heading_view_height"
+        android:gravity="center_vertical"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+    	android:paddingRight="@dimen/activity_horizontal_margin"
+        android:textSize="@dimen/default_heading_text_size"
+		android:fontFamily="sans-serif-light" />
     
     <ListView android:id="@+id/list"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
         android:paddingLeft="@dimen/activity_horizontal_margin"
-    	  android:paddingRight="@dimen/activity_horizontal_margin" />
+    	android:paddingRight="@dimen/activity_horizontal_margin" />
     
     <LinearLayout style="?android:buttonBarStyle"
         android:layout_width="match_parent"
@@ -29,8 +34,8 @@
         	android:layout_width="0dp"
         	android:layout_height="wrap_content"
         	android:layout_weight="1"
-        	android:paddingTop="5dp"
-        	android:paddingBottom="5dp"
+        	android:paddingTop="@dimen/default_buttonbar_padding_top"
+        	android:paddingBottom="@dimen/default_buttonbar_padding_bottom"
         	android:text="@string/change_date"
         	android:textAppearance="?android:textAppearanceSmall"
         	android:drawableTop="@drawable/ic_content_date" />
@@ -40,8 +45,8 @@
         	android:layout_width="0dp"
         	android:layout_height="wrap_content"
         	android:layout_weight="1"
-        	android:paddingTop="5dp"
-        	android:paddingBottom="5dp"
+        	android:paddingTop="@dimen/default_buttonbar_padding_top"
+        	android:paddingBottom="@dimen/default_buttonbar_padding_bottom"
         	android:text="@string/new_task"
         	android:textAppearance="?android:textAppearanceSmall"
         	android:drawableTop="@drawable/ic_content_new" />
@@ -51,8 +56,8 @@
             android:layout_width="0dp"
         	android:layout_height="wrap_content"
         	android:layout_weight="1"
-        	android:paddingTop="5dp"
-        	android:paddingBottom="5dp"
+        	android:paddingTop="@dimen/default_buttonbar_padding_top"
+        	android:paddingBottom="@dimen/default_buttonbar_padding_bottom"
         	android:text="@string/done"
         	android:textAppearance="?android:textAppearanceSmall"
         	android:drawableTop="@drawable/ic_navigation_accept" />

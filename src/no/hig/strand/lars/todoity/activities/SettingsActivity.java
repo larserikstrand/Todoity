@@ -1,7 +1,6 @@
 package no.hig.strand.lars.todoity.activities;
 
 import no.hig.strand.lars.todoity.R;
-import no.hig.strand.lars.todoity.R.xml;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;

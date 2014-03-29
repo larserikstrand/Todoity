@@ -1,5 +1,6 @@
 package no.hig.strand.lars.todoity.views;
 
+
 import java.util.ArrayList;
 
 import no.hig.strand.lars.todoity.adapters.TodayListAdapter;
@@ -22,9 +23,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.widget.AbsListView;
-import android.widget.BaseAdapter;
 import android.widget.ListView;
-
 
 /**
  * The dynamic listview is an extension of listview that supports cell dragging
@@ -47,11 +46,11 @@ import android.widget.ListView;
  * When the hover cell is either above or below the bounds of the listview, this
  * listview also scrolls on its own so as to reveal additional content.
  */
-public class DraggableListView extends ListView {
+public class DynamicListView extends ListView {
 
     private final int SMOOTH_SCROLL_AMOUNT_AT_EDGE = 15;
-    private final int MOVE_DURATION = 200;
-    private final int LINE_THICKNESS = 10;
+    private final int MOVE_DURATION = 150;
+    private final int LINE_THICKNESS = 15;
 
     public ArrayList<Task> mTaskList;
 
@@ -80,39 +79,39 @@ public class DraggableListView extends ListView {
 
     private boolean mIsWaitingForScrollFinish = false;
     private int mScrollState = OnScrollListener.SCROLL_STATE_IDLE;
+
     
-    
-    public DraggableListView(Context context) {
+    public DynamicListView(Context context) {
         super(context);
         init(context);
     }
 
     
     
-    public DraggableListView(Context context, AttributeSet attrs, int defStyle) {
+    public DynamicListView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         init(context);
     }
 
     
     
-    public DraggableListView(Context context, AttributeSet attrs) {
+    public DynamicListView(Context context, AttributeSet attrs) {
         super(context, attrs);
         init(context);
     }
-    
-    
 
+    
+    
     public void init(Context context) {
         setOnScrollListener(mScrollListener);
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         mSmoothScrollAmountAtEdge = (int)(SMOOTH_SCROLL_AMOUNT_AT_EDGE / metrics.density);
     }
+
     
-    
-    
+
     public boolean startDrag() {
-    	mTotalOffset = 0;
+        mTotalOffset = 0;
 
         int position = pointToPosition(mDownX, mDownY);
         int itemNum = position - getFirstVisiblePosition();
@@ -128,7 +127,7 @@ public class DraggableListView extends ListView {
 
         return true;
     }
-
+     
     
     
     /**
@@ -195,7 +194,7 @@ public class DraggableListView extends ListView {
      */
     private void updateNeighborViewsForID(long itemID) {
         int position = getPositionForID(itemID);
-        TodayListAdapter adapter = ((TodayListAdapter) getAdapter());
+        TodayListAdapter adapter = ((TodayListAdapter)getAdapter());
         mAboveItemId = adapter.getItemId(position - 1);
         mBelowItemId = adapter.getItemId(position + 1);
     }
@@ -305,15 +304,15 @@ public class DraggableListView extends ListView {
     }
     
     
-
+    
     @Override
 	public boolean onInterceptTouchEvent(MotionEvent ev) {
 		onTouchEvent(ev);
 		return false;
 	}
+    
+    
 
-    
-    
 	/**
      * This method determines whether the hover cell has been shifted far enough
      * to invoke a cell swap. If so, then the respective cell swap candidate is
@@ -347,14 +346,14 @@ public class DraggableListView extends ListView {
 
             swapElements(mTaskList, originalItem, getPositionForView(switchView));
 
-            ((BaseAdapter) getAdapter()).notifyDataSetChanged();
+            ((TodayListAdapter) getAdapter()).notifyDataSetChanged();
 
             mDownY = mLastEventY;
 
             final int switchViewStartTop = switchView.getTop();
-                        
-            mobileView.setVisibility(VISIBLE);
-            switchView.setVisibility(INVISIBLE);
+
+            mobileView.setVisibility(View.VISIBLE);
+            switchView.setVisibility(View.INVISIBLE);
 
             updateNeighborViewsForID(mMobileItemId);
 
@@ -385,10 +384,10 @@ public class DraggableListView extends ListView {
 
     
     
-    private void swapElements(ArrayList<Task> arrayList, int indexOne, int indexTwo) {
-        Task temp = arrayList.get(indexOne);
-        arrayList.set(indexOne, arrayList.get(indexTwo));
-        arrayList.set(indexTwo, temp);
+    private void swapElements(ArrayList<Task> tasks, int indexOne, int indexTwo) {
+        Task temp = tasks.get(indexOne);
+        tasks.set(indexOne, tasks.get(indexTwo));
+        tasks.set(indexTwo, temp);
     }
 
 
@@ -399,7 +398,7 @@ public class DraggableListView extends ListView {
      */
     private void touchEventsEnded () {
         final View mobileView = getViewForID(mMobileItemId);
-        if (mCellIsMobile || mIsWaitingForScrollFinish) {
+        if (mCellIsMobile|| mIsWaitingForScrollFinish) {
             mCellIsMobile = false;
             mIsWaitingForScrollFinish = false;
             mIsMobileScrolling = false;
@@ -441,7 +440,8 @@ public class DraggableListView extends ListView {
                 }
             });
             hoverViewAnimator.start();
-            ((TodayListAdapter) getAdapter()).onDragEnd();
+            
+            ((TodayListAdapter) getAdapter()).dragEnded();
         } else {
             touchEventsCancelled();
         }
@@ -453,7 +453,7 @@ public class DraggableListView extends ListView {
      * Resets all the appropriate fields to a default state.
      */
     private void touchEventsCancelled () {
-    	View mobileView = getViewForID(mMobileItemId);
+        View mobileView = getViewForID(mMobileItemId);
         if (mCellIsMobile) {
             mAboveItemId = INVALID_ID;
             mMobileItemId = INVALID_ID;
@@ -525,6 +525,8 @@ public class DraggableListView extends ListView {
         return false;
     }
 
+    
+    
     public void setTaskList(ArrayList<Task> taskList) {
         mTaskList = taskList;
     }

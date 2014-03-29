@@ -16,7 +16,6 @@ import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 public class ListAdapter extends ArrayAdapter<Task> {
@@ -24,6 +23,36 @@ public class ListAdapter extends ArrayAdapter<Task> {
 	private Context mContext;
 	private ArrayList<Task> mTasks;
 	private LayoutInflater mInflater;
+	
+	private OnClickListener mEditListener = new OnClickListener() {
+		@Override
+		public void onClick(View v) {
+			ViewHolder holder = (ViewHolder) ((View) v.getParent()).getTag();
+			
+			Intent intent = new Intent(mContext, TaskActivity.class);
+			intent.putExtra(Constant.TASK_EXTRA, mTasks.get(holder.position));
+			intent.putExtra(Constant.POSITION_EXTRA, holder.position);
+			
+			((ListActivity) mContext).startActivityForResult(
+					intent, Constant.EDIT_TASK_REQUEST);
+		}
+	};
+	
+	private OnClickListener mDeleteListener = new OnClickListener() {
+		@Override
+		public void onClick(View v) {
+			/*LinearLayout layout = (LinearLayout) v.getParent();
+			ListView listView = (ListView) layout.getParent();
+			int position = (Integer) layout.getTag();
+			Task task = mTasks.get(position);
+			mTasks.remove(position);
+			listView.setAdapter(new TaskListAdapter(context, mTasks));
+			new DatabaseUtilities.DeleteTask(
+					ListActivity.this, task, null).execute();
+			new AppEngineUtilities.RemoveTask(
+					ListActivity.this, task).execute();*/
+		}
+	};
 	
 	
 	public ListAdapter(Context context, ArrayList<Task> tasks) {
@@ -33,8 +62,9 @@ public class ListAdapter extends ArrayAdapter<Task> {
 		mInflater = (LayoutInflater) context
 				.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 	}
-
-
+	
+	
+	
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 		ViewHolder holder;
@@ -61,48 +91,17 @@ public class ListAdapter extends ArrayAdapter<Task> {
 		
 		Task task = mTasks.get(position);
 		
+		holder.taskText.setText(Task.getTaskTextFromTask(task));
+		holder.subText.setText(Task.getSubTextFromTask(task));
+		
 		if (task.isFinished()) {
 			holder.editButton.setVisibility(View.GONE);
 			holder.deleteButton.setVisibility(View.GONE);
 			setStrikeThrough(holder);
 		}
 		
-		holder.taskText.setText(Task.getTaskTextFromTask(task));
-		holder.subText.setText(Task.getSubTextFromTask(task));
-		
-		holder.editButton.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				LinearLayout layout = (LinearLayout) v.getParent();
-				ViewHolder holder = (ViewHolder) layout.getTag();
-				
-				//mTempTaskNumber = position;
-				
-				Intent intent = new Intent(mContext, TaskActivity.class);
-				intent.putExtra(Constant.TASK_EXTRA,
-						mTasks.get(holder.position));
-				intent.putExtra(Constant.POSITION_EXTRA, holder.position);
-				
-				((ListActivity) mContext).startActivityForResult(
-						intent, Constant.EDIT_TASK_REQUEST);
-			}
-		});
-		
-		holder.deleteButton.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				/*LinearLayout layout = (LinearLayout) v.getParent();
-				ListView listView = (ListView) layout.getParent();
-				int position = (Integer) layout.getTag();
-				Task task = mTasks.get(position);
-				mTasks.remove(position);
-				listView.setAdapter(new TaskListAdapter(context, mTasks));
-				new DatabaseUtilities.DeleteTask(
-						ListActivity.this, task, null).execute();
-				new AppEngineUtilities.RemoveTask(
-						ListActivity.this, task).execute();*/
-			}
-		});
+		holder.editButton.setOnClickListener(mEditListener);
+		holder.deleteButton.setOnClickListener(mDeleteListener);
 		
 		return convertView;
 	}

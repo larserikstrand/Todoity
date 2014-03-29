@@ -7,7 +7,8 @@ import no.hig.strand.lars.todoity.R;
 import no.hig.strand.lars.todoity.adapters.PlacesAutoCompleteAdapter;
 import no.hig.strand.lars.todoity.data.Constant;
 import no.hig.strand.lars.todoity.data.Task;
-import android.app.Activity;
+import no.hig.strand.lars.todoity.helpers.TimePickerFragment;
+import no.hig.strand.lars.todoity.helpers.TimePickerFragment.OnTimeSetListener;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -16,6 +17,8 @@ import android.location.Geocoder;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.v4.app.DialogFragment;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NavUtils;
 import android.util.Log;
 import android.view.MenuItem;
@@ -38,7 +41,7 @@ import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
 
-public class TaskActivity extends Activity {
+public class TaskActivity extends FragmentActivity implements OnTimeSetListener {
 
 	private Task mTask;
 	private int mPosition;
@@ -46,7 +49,8 @@ public class TaskActivity extends Activity {
 	private ArrayAdapter<String> mAutoCompleteAdapter;
 	private Spinner mCategory;
 	private EditText mDescription;
-	private CheckBox fixedTime;
+	private CheckBox mFixedTime;
+	private Button mTimeButton;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -179,8 +183,8 @@ public class TaskActivity extends Activity {
 		});
 		
 		// Set behavior of the fixed time check box.
-		fixedTime = (CheckBox) findViewById(R.id.fixed_time_check);
-		fixedTime.setOnCheckedChangeListener(new OnCheckedChangeListener() {
+		mFixedTime = (CheckBox) findViewById(R.id.fixed_time_check);
+		mFixedTime.setOnCheckedChangeListener(new OnCheckedChangeListener() {
 			@Override
 			public void onCheckedChanged(CompoundButton buttonView, 
 					boolean isChecked) {
@@ -196,16 +200,16 @@ public class TaskActivity extends Activity {
 			}
 		});
 		if (! mTask.getFixedStart().equals("")) {
-			fixedTime.setChecked(true);
+			mFixedTime.setChecked(true);
 		}
 		
 		// Set behavior of the fixed time buttons
 		OnClickListener timeButtonListener = new OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				/*mActiveTimeButton = (Button) v;
-				DialogFragment tpf = new TimePickerFragment();
-				tpf.show(getSupportFragmentManager(), "timePicker");*/
+				mTimeButton = (Button) v;
+				DialogFragment timePicker = new TimePickerFragment();
+				timePicker.show(getSupportFragmentManager(), "timePicker");
 			}
 		};
 		button = (Button) findViewById(R.id.from_button);
@@ -237,7 +241,7 @@ public class TaskActivity extends Activity {
 		if (mTask.getLatitude() != 0 || ! mTask.getAddress().isEmpty()) {
 			
 			// Check start time if the fixed time box is ticked.
-			if (fixedTime.isChecked()) {
+			if (mFixedTime.isChecked()) {
 				Button button = (Button) findViewById(R.id.from_button);
 				String fixedStart = button.getText().toString();
 				button = (Button) findViewById(R.id.to_button);
@@ -253,6 +257,11 @@ public class TaskActivity extends Activity {
 							Toast.LENGTH_LONG).show();
 					return;
 				}
+			// If task doesn't have fixed times, reset values in case the task
+			//  is being edited.
+			} else {
+				mTask.setFixedStart("");
+				mTask.setFixedEnd("");
 			}
 			
 			mTask.setCategory(mCategory.getSelectedItem().toString());
@@ -270,6 +279,13 @@ public class TaskActivity extends Activity {
 			Toast.makeText(TaskActivity.this, getString(
 					R.string.set_location_message), Toast.LENGTH_LONG).show();
 		}
+	}
+	
+	
+	
+	@Override
+	public void onTimeSet(String time) {
+		mTimeButton.setText(time);
 	}
 	
 	

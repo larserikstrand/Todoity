@@ -3,6 +3,8 @@ package no.hig.strand.lars.todoity.helpers;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+
+import no.hig.strand.lars.todoity.data.Constant;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.DatePickerDialog;
@@ -13,10 +15,10 @@ import android.support.v4.app.DialogFragment;
 import android.widget.DatePicker;
 
 @SuppressLint("SimpleDateFormat")
-public class DatePickerFragment extends DialogFragment implements OnDateSetListener {
+public class DatePickerFragment extends DialogFragment implements 
+		OnDateSetListener {
 	
 	private OnDateSetListener mCallback;
-	
 	
 	public interface OnDateSetListener {
 		public void onDateSet(String date);
@@ -58,7 +60,7 @@ public class DatePickerFragment extends DialogFragment implements OnDateSetListe
 	public void onDateSet(DatePicker view, int year, int monthOfYear,
 			int dayOfMonth) {
 		SimpleDateFormat formatter = 
-				new SimpleDateFormat("EEEE, MMM dd, yyyy");
+				new SimpleDateFormat(Constant.DATE_FORMAT);
 		Calendar c = new GregorianCalendar(year, monthOfYear, dayOfMonth);
 		
 		String date = formatter.format(c.getTime());
