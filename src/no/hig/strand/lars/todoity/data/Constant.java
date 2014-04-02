@@ -9,6 +9,7 @@ public class Constant {
 	public final static int NEW_TASK_REQUEST = 3;
 	public final static int EDIT_TASK_REQUEST = 4;
 	public final static int MAP_REQUEST = 5;
+	public final static int MOVE_TASK_REQUEST = 6;
 	
 	public final static String TASK_EXTRA = "no.hig.strand.lars.todoity.TASK";
 	public final static String TASKS_EXTRA = "no.hig.strand.lars.todoity.TASKS";
@@ -17,6 +18,8 @@ public class Constant {
 			"no.hig.strand.lars.todoity.LOCATION";
 	public final static String POSITION_EXTRA = 
 			"no.hig.strand.lars.todoity.POSITION";
+	public final static String DATEPICKER_TITLE_EXTRA = 
+			"no.hig.strand.lars.todoity.DATEPICKER_TITLE";
 	
 	public final static String DATE_FORMAT = "EEE, MMM dd, yyyy";
 	public final static String TIME_FORMAT = "HH:mm";

@@ -9,6 +9,7 @@ import no.hig.strand.lars.todoity.fragments.AllTasksFragment;
 import no.hig.strand.lars.todoity.fragments.TodayFragment;
 import no.hig.strand.lars.todoity.fragments.WeekFragment;
 import no.hig.strand.lars.todoity.helpers.DatabaseUtilities.OnTasksLoadedListener;
+import no.hig.strand.lars.todoity.helpers.DatePickerFragment.OnDateSetListener;
 import no.hig.strand.lars.todoity.helpers.Installation;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
@@ -23,7 +24,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 public class MainActivity extends FragmentActivity implements 
-		OnTasksLoadedListener {
+		OnTasksLoadedListener, OnDateSetListener {
 	
 	private TabsPagerAdapter mTabsPagerAdapter;
 	private ViewPager mViewPager;
@@ -47,18 +48,9 @@ public class MainActivity extends FragmentActivity implements
     }
 
 
-    
-    @Override
-	protected void onPause() {
-		// TODO Auto-generated method stub
-		super.onPause();
-	}
-
-
 
 	@Override
 	protected void onResume() {
-		// TODO Auto-generated method stub
 		super.onResume();
 	}
 
@@ -75,18 +67,29 @@ public class MainActivity extends FragmentActivity implements
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
+		case R.id.action_new_list:
+			startActivity(new Intent(this, ListActivity.class));
+			return true;
 		case R.id.action_settings:
 			startActivity(new Intent(this, SettingsActivity.class));
 			return true;
-		//case R.id.action_about:
-			//startActivity(new Intent(this, AboutActivity.class));
-			//return true;
+		case R.id.action_about:
+			startActivity(new Intent(this, AboutActivity.class));
+			return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
 	
 	
 	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, 
+			Intent data) {
+		super.onActivityResult(requestCode, resultCode, data);
+	}
+
+
+
 	private void setupUI() {
 		final ActionBar actionBar = getActionBar();
     	actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
@@ -122,16 +125,26 @@ public class MainActivity extends FragmentActivity implements
 	
 	
 	
+	public Fragment getFragmentAt(int position) {
+		return mTabsPagerAdapter.getRegisteredFragment(position);
+	}
+	
+	
+	
 	public void updateNeighborFragments() {
 		Fragment fragment;
+		Fragment currentFragment = mTabsPagerAdapter.getRegisteredFragment(
+				mViewPager.getCurrentItem());
 		for (int i = 0; i < mTabsPagerAdapter.getCount(); i++) {
 			fragment = mTabsPagerAdapter.getRegisteredFragment(i);
-			if (fragment instanceof TodayFragment) {
-				((TodayFragment) fragment).update();
-			} else if (fragment instanceof WeekFragment) {
-				((WeekFragment) fragment).update();
-			} else  if (fragment instanceof AllTasksFragment){
-				((AllTasksFragment) fragment).update();
+			if (fragment != currentFragment) {
+				if (fragment instanceof TodayFragment) {
+					((TodayFragment) fragment).update();
+				} else if (fragment instanceof WeekFragment) {
+					((WeekFragment) fragment).update();
+				} else  if (fragment instanceof AllTasksFragment){
+					((AllTasksFragment) fragment).update();
+				}
 			}
 		}
 	}
@@ -145,9 +158,18 @@ public class MainActivity extends FragmentActivity implements
 			((TodayFragment) fragment).updateList(tasks);
 		}
 	}
-	
-	
-    
-	
+
+
+
+	@Override
+	public void onDateSet(String date, Fragment target, Bundle args) {
+		if (target instanceof TodayFragment) {
+			((TodayFragment) target).onDateSet(date, null, args);
+		} else if (target instanceof WeekFragment) {
+			((WeekFragment) target).onDateSet(date, null, args);
+		} else if (target instanceof AllTasksFragment) {
+			((AllTasksFragment) target).onDateSet(date, null, args);
+		}
+	}
 	
 }

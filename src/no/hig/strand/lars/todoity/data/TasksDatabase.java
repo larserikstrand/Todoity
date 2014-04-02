@@ -124,6 +124,28 @@ public class TasksDatabase {
 	
 	
 	
+	private long getListIfLastTask(int taskId) {
+		Cursor c1 = mDb.query(TaskEntry.TABLE_NAME, null, 
+				TaskEntry._ID + " = ? ", 
+				new String[] { Integer.toString(taskId) },
+				null, null, null);
+		if (c1.moveToFirst()) {
+			long list = c1.getLong(c1.getColumnIndexOrThrow(
+					TaskEntry.COLUMN_NAME_LIST));
+			c1 = mDb.query(TaskEntry.TABLE_NAME, null, 
+					TaskEntry.COLUMN_NAME_LIST + " = ?", 
+					new String[] { Long.toString(list) },
+					null, null, null);
+			if (c1.getCount() == 1) {
+				return list;
+			}
+		}
+		
+		return -1;
+	}
+	
+	
+	
 	//*************** RETRIEVAL QUERIES ***************
 	
 	private Cursor fetchListById(int listId) {
@@ -289,23 +311,11 @@ public class TasksDatabase {
 	public boolean deleteTaskById(int taskId) {
 		open();
 		
-		// Get the list id of the task.
-		Cursor c1 = mDb.query(TaskEntry.TABLE_NAME, null, 
-				TaskEntry._ID + " = ? ", 
-				new String[] { Integer.toString(taskId) }, null, null, null);
-		if (c1.moveToFirst()) {
-			// Get all other tasks in the same list.
-			long listId = c1.getLong(c1.getColumnIndexOrThrow(
-					TaskEntry.COLUMN_NAME_LIST));
-			c1 = mDb.query(TaskEntry.TABLE_NAME, null, 
-					TaskEntry.COLUMN_NAME_LIST + " = ? ", 
-					new String[] { Long.toString(listId) }, null, null, null);
-			// If the task is the last in a list, also delete the list.
-			if (c1.getCount() == 1) {
-				mDb.delete(ListEntry.TABLE_NAME, 
-						ListEntry._ID + " = ?", 
-						new String[] { Long.toString(listId) } );
-			}
+		long listId = getListIfLastTask(taskId);
+		if (listId != -1) {
+			mDb.delete(ListEntry.TABLE_NAME, 
+					ListEntry._ID + " = ?", 
+					new String[] { Long.toString(listId) } );
 		}
 		
 		deleteTimes(taskId);
@@ -360,6 +370,27 @@ public class TasksDatabase {
 		} else {
 			deleteTimes(task.getId());
 		}
+		
+		close();
+		return result > 0 ? true : false;
+	}
+	
+	
+	
+	public boolean moveTaskToList(int taskId, long toListId) {
+		open();
+		
+		long fromListId = getListIfLastTask(taskId);
+		if (fromListId != -1) {
+			mDb.delete(ListEntry.TABLE_NAME, 
+					ListEntry._ID + " = ?", 
+					new String[] { Long.toString(fromListId) } );
+		}
+		ContentValues values = new ContentValues();
+		values.put(TaskEntry.COLUMN_NAME_LIST, toListId);
+		int result = mDb.update(TaskEntry.TABLE_NAME, values,
+				TaskEntry._ID + " = ?", 
+				new String[] { Integer.toString(taskId) });
 		
 		close();
 		return result > 0 ? true : false;

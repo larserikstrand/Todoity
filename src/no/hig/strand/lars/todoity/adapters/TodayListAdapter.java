@@ -6,21 +6,23 @@ import java.util.HashMap;
 import no.hig.strand.lars.todoity.R;
 import no.hig.strand.lars.todoity.activities.MainActivity;
 import no.hig.strand.lars.todoity.data.Task;
+import no.hig.strand.lars.todoity.fragments.TodayFragment;
 import no.hig.strand.lars.todoity.helpers.DatabaseUtilities;
 import no.hig.strand.lars.todoity.views.DynamicListView;
 import android.content.Context;
 import android.graphics.Paint;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnLongClickListener;
+import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
-import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -85,13 +87,23 @@ public class TodayListAdapter extends ArrayAdapter<Task> {
 		}
 	};
 	
-	private OnLongClickListener mDragListener = new OnLongClickListener() {
+	private OnTouchListener mDragListener = new OnTouchListener() {
 		@Override
-		public boolean onLongClick(View v) {
-			DynamicListView listView = (DynamicListView) v
-					.getParent().getParent();
-			listView.startDrag();
-			return true;
+		public boolean onTouch(View v, MotionEvent event) {
+			((TodayFragment) ((MainActivity) mContext)
+					.getFragmentAt(0)).stopActionMode();
+			DynamicListView listView;
+			switch (event.getAction() & MotionEvent.ACTION_MASK) {
+			case MotionEvent.ACTION_UP:
+				listView = (DynamicListView) v.getParent().getParent();
+				listView.touchEventsCancelled();
+				break;
+			case MotionEvent.ACTION_DOWN:
+				listView = (DynamicListView) v.getParent().getParent();
+				listView.startDrag(v, event);
+				break;
+			}
+			return false;
 		}
 	};
 	
@@ -140,7 +152,7 @@ public class TodayListAdapter extends ArrayAdapter<Task> {
 					R.id.today_item_task_text);
 			holder.subText = (TextView) convertView.findViewById(
 					R.id.today_item_sub_text);
-			holder.dragButton = (ImageButton) convertView.findViewById(
+			holder.dragButton = (ImageView) convertView.findViewById(
 					R.id.drag_button);
 			holder.finishedCheck = (CheckBox) convertView.findViewById(
 					R.id.finish_check);
@@ -153,8 +165,6 @@ public class TodayListAdapter extends ArrayAdapter<Task> {
 			holder = (ViewHolder) convertView.getTag();
 		}
 		
-		//rowView.setTag(position);
-		//registerForContextMenu(rowView);
 		Task task = mTasks.get(position);
 		
 		holder.taskText.setText(Task.getTaskTextFromTask(task));
@@ -177,16 +187,9 @@ public class TodayListAdapter extends ArrayAdapter<Task> {
 		holder.finishedCheck.setOnCheckedChangeListener(mFinishedListener);
 		
 		// Enable drag and drop reordering.
-		holder.dragButton.setOnLongClickListener(mDragListener);
+		holder.dragButton.setOnTouchListener(mDragListener);
 		
 		return convertView;
-	}
-	
-	
-	
-	@Override
-	public boolean isEnabled(int position) {
-		return true;
 	}
 	
 	
@@ -213,15 +216,14 @@ public class TodayListAdapter extends ArrayAdapter<Task> {
 			holder.subText.setPaintFlags(holder.subText.getPaintFlags() 
 					& (~Paint.STRIKE_THRU_TEXT_FLAG));
 		}
-		
 	}
-	
-	
-	
+
+
+
 	private static class ViewHolder {
 		public TextView taskText;
 		public TextView subText;
-		public ImageButton dragButton;
+		public ImageView dragButton;
 		public CheckBox finishedCheck;
 		public Button startPauseButton;
 		public int position;

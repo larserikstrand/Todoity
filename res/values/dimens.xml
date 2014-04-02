@@ -7,6 +7,7 @@
     <!-- Default app dimensions -->
     <dimen name="default_divider_padding">8dp</dimen>
     <dimen name="default_heading_view_height">50dp</dimen>
+    <dimen name="default_list_item_height">65dp</dimen>
     <dimen name="default_heading_text_size">22sp</dimen>
     <dimen name="default_buttonbar_padding_bottom">5dp</dimen>
     <dimen name="default_buttonbar_padding_top">5dp</dimen>

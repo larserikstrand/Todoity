@@ -110,13 +110,18 @@ public class DynamicListView extends ListView {
 
     
 
-    public boolean startDrag() {
+    public boolean startDrag(View v, MotionEvent event) {
+    	View row = (View) v.getParent();
+    	
+    	mDownX = (int) event.getX() + v.getLeft() + row.getLeft();
+        mDownY = (int) event.getY() + v.getTop() + row.getTop();
+        mActivePointerId = event.getPointerId(0);
+    	
         mTotalOffset = 0;
 
         int position = pointToPosition(mDownX, mDownY);
-        int itemNum = position - getFirstVisiblePosition();
 
-        View selectedView = getChildAt(itemNum);
+        View selectedView = row;
         mMobileItemId = getAdapter().getItemId(position);
         mHoverCell = getAndAddHoverView(selectedView);
         selectedView.setVisibility(View.INVISIBLE);
@@ -249,11 +254,6 @@ public class DynamicListView extends ListView {
     public boolean onTouchEvent (MotionEvent event) {
 
         switch (event.getAction() & MotionEvent.ACTION_MASK) {
-            case MotionEvent.ACTION_DOWN:
-                mDownX = (int)event.getX();
-                mDownY = (int)event.getY();
-                mActivePointerId = event.getPointerId(0);
-                break;
             case MotionEvent.ACTION_MOVE:
                 if (mActivePointerId == INVALID_POINTER_ID) {
                     break;
@@ -305,11 +305,11 @@ public class DynamicListView extends ListView {
     
     
     
-    @Override
+    /*@Override
 	public boolean onInterceptTouchEvent(MotionEvent ev) {
 		onTouchEvent(ev);
-		return false;
-	}
+		return true;
+	}*/
     
     
 
@@ -440,7 +440,7 @@ public class DynamicListView extends ListView {
                 }
             });
             hoverViewAnimator.start();
-            
+            setEnabled(true);
             ((TodayListAdapter) getAdapter()).dragEnded();
         } else {
             touchEventsCancelled();
@@ -452,7 +452,7 @@ public class DynamicListView extends ListView {
     /**
      * Resets all the appropriate fields to a default state.
      */
-    private void touchEventsCancelled () {
+    public void touchEventsCancelled () {
         View mobileView = getViewForID(mMobileItemId);
         if (mCellIsMobile) {
             mAboveItemId = INVALID_ID;

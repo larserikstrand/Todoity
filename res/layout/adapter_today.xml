@@ -2,8 +2,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/today_item"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="@dimen/default_list_item_height"
     android:orientation="horizontal"
+    android:background="?android:activatedBackgroundIndicator"
     android:descendantFocusability="blocksDescendants" >
     
     <ImageButton android:id="@+id/drag_button"
@@ -11,14 +12,14 @@
         android:layout_height="match_parent"
         android:layout_gravity="center_vertical"
         android:paddingLeft="10dp"
-        android:paddingRight="10dp"
+        android:paddingRight="5dp"
         android:background="@android:color/transparent"
         android:src="@drawable/ic_content_reorder"
         android:contentDescription="@string/reorder_task" />
     
     <CheckBox android:id="@+id/finish_check"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_gravity="center_vertical"
         android:layout_marginRight="10dp"
         android:scaleX="1.4"
@@ -27,27 +28,36 @@
     <LinearLayout android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
+        android:layout_gravity="center_vertical"
         android:orientation="vertical" >
         
         <TextView android:id="@+id/today_item_task_text"
+            style="?android:textAppearanceMedium"
         	android:layout_width="wrap_content"
         	android:layout_height="wrap_content"
-        	android:textAppearance="?android:textAppearanceMedium" />
+        	android:fontFamily="sans-serif-condensed"
+        	android:textStyle="bold"
+        	android:ellipsize="end"
+        	android:maxLines="2"
+        	android:lineSpacingMultiplier="0.85" />
         
         <TextView android:id="@+id/today_item_sub_text"
+            style="?android:textAppearanceSmall"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textAppearance="?android:textAppearanceSmall"
-            android:textColor="@android:color/secondary_text_dark" />
+            android:textColor="@android:color/secondary_text_dark"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:ellipsize="end" />
         
     </LinearLayout>
     
     <Button android:id="@+id/start_pause_button"
         style="?android:borderlessButtonStyle"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:layout_gravity="center_vertical"
-        android:layout_marginRight="5dp"
+        android:paddingRight="5dp"
         android:text="@string/start" />
 
 </LinearLayout>

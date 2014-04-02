@@ -12,21 +12,4 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
     
-    <LinearLayout style="?android:buttonBarStyle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" >
-    
-        <Button android:id="@+id/all_tasks_new_list_button"
-            style="?android:buttonBarButtonStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:paddingTop="@dimen/default_buttonbar_padding_top"
-        	android:paddingBottom="@dimen/default_buttonbar_padding_bottom"
-            android:text="@string/new_list"
-            android:textAppearance="?android:textAppearanceSmall"
-            android:drawableTop="@drawable/ic_content_new" />
-    
-    </LinearLayout>
-    
 </LinearLayout>

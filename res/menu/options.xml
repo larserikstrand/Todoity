@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+    
+    <item android:id="@+id/options_edit"
+        android:showAsAction="ifRoom"
+        android:icon="@drawable/ic_content_edit"
+        android:title="@string/edit" />
+    
+    <item android:id="@+id/options_move"
+        android:showAsAction="ifRoom"
+        android:icon="@drawable/ic_content_date"
+        android:title="@string/move" />
+    
+    <item android:id="@+id/options_delete"
+        android:showAsAction="ifRoom"
+        android:icon="@drawable/ic_content_discard"
+        android:title="@string/delete" />
+
+</menu>

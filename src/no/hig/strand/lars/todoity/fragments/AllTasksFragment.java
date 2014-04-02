@@ -6,24 +6,25 @@ import java.util.HashMap;
 import java.util.List;
 
 import no.hig.strand.lars.todoity.R;
-import no.hig.strand.lars.todoity.activities.ListActivity;
+import no.hig.strand.lars.todoity.activities.MainActivity;
 import no.hig.strand.lars.todoity.adapters.AllTasksListAdapter;
+import no.hig.strand.lars.todoity.data.Constant;
 import no.hig.strand.lars.todoity.data.Task;
 import no.hig.strand.lars.todoity.data.Task.TaskPriorityComparator;
 import no.hig.strand.lars.todoity.data.TasksDatabase;
+import no.hig.strand.lars.todoity.helpers.DatabaseUtilities.MoveTask;
+import no.hig.strand.lars.todoity.helpers.DatePickerFragment.OnDateSetListener;
+import no.hig.strand.lars.todoity.helpers.Utilities.DateComparator;
 import android.content.Context;
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.ExpandableListView;
 
-public class AllTasksFragment extends Fragment {
+public class AllTasksFragment extends Fragment implements OnDateSetListener {
 
 	private View mRootView;
 	private ExpandableListView mListView;
@@ -45,8 +46,6 @@ public class AllTasksFragment extends Fragment {
 		mAdapter = new AllTasksListAdapter(getActivity(), mDates, mTasks);
 		mListView.setAdapter(mAdapter);
 		
-		setupUI();
-		
 		return mRootView;
 	}
 	
@@ -56,19 +55,6 @@ public class AllTasksFragment extends Fragment {
 	public void onResume() {
 		update();
 		super.onResume();
-	}
-	
-	
-	
-	private void setupUI() {
-		Button button = (Button) mRootView
-				.findViewById(R.id.all_tasks_new_list_button);
-		button.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				startActivity(new Intent(getActivity(), ListActivity.class));
-			}
-		});
 	}
 	
 	
@@ -97,6 +83,42 @@ public class AllTasksFragment extends Fragment {
 	
 	
 	
+	@Override
+	public void onDateSet(String date, Fragment target, Bundle args) {
+		// Because new items are created, we reload the entire adapter.
+		Task task = args.getParcelable(Constant.TASK_EXTRA);
+		String oldDate = task.getDate();
+		if (! date.equals(task.getDate())) {
+			ArrayList<Task> tasks = (ArrayList<Task>) mTasks.get(oldDate);
+			if (! mDates.contains(date)) {
+				mDates.add(date);
+				mTasks.put(date, new ArrayList<Task>());
+			}
+			mTasks.get(date).add(task);
+			if (tasks.size() == 1) {
+				mTasks.remove(oldDate);
+				mDates.remove(oldDate);
+			} else {
+				mTasks.get(oldDate).remove(task);
+			}
+			Collections.sort(mDates, new DateComparator());
+			TaskPriorityComparator comparator = new TaskPriorityComparator();
+			for (String d : mDates) {
+				Collections.sort(mTasks.get(d), comparator);
+			}
+			
+			task.setDate(date);
+			// We need to set the adapter again. (Don't really know why.
+			//  Perhaps because new children may have been added to the list.)
+			mAdapter = new AllTasksListAdapter(getActivity(), mDates, mTasks);
+			mListView.setAdapter(mAdapter);
+			new MoveTask(getActivity(), task, date).execute();
+			((MainActivity) getActivity()).updateNeighborFragments();
+		}
+	}
+	
+	
+	
 	private class GetTasksTask extends 
 			AsyncTask<Void, Void, ArrayList<Task>> {
 
@@ -111,6 +133,7 @@ public class AllTasksFragment extends Fragment {
 			ArrayList<Task> allTasks = new ArrayList<Task>();
 			
 			ArrayList<String> dates = tasksDb.getListDates();
+			Collections.sort(dates, new DateComparator());
 			TaskPriorityComparator comparator = new TaskPriorityComparator();
 			ArrayList<Task> dateTasks;
 			for (String date : dates) {

@@ -12,6 +12,7 @@ import android.app.DatePickerDialog.OnDateSetListener;
 import android.app.Dialog;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
 import android.widget.DatePicker;
 
 @SuppressLint("SimpleDateFormat")
@@ -19,9 +20,10 @@ public class DatePickerFragment extends DialogFragment implements
 		OnDateSetListener {
 	
 	private OnDateSetListener mCallback;
+	private Bundle args;
 	
 	public interface OnDateSetListener {
-		public void onDateSet(String date);
+		public void onDateSet(String date, Fragment target, Bundle args);
 	}
 	
 	
@@ -47,9 +49,15 @@ public class DatePickerFragment extends DialogFragment implements
 		int month = c.get(Calendar.MONTH);
 		int day = c.get(Calendar.DAY_OF_MONTH);
 		
+		
 		DatePickerDialog dialog = new DatePickerDialog(getActivity(), 
 				this, year, month, day);
 		dialog.getDatePicker().setMinDate(c.getTimeInMillis());
+		
+		args = getArguments();
+		if (args != null && args.containsKey(Constant.DATEPICKER_TITLE_EXTRA)) {
+			dialog.setTitle(args.getString(Constant.DATEPICKER_TITLE_EXTRA));
+		}
 		
 		return dialog;
 	}
@@ -64,8 +72,8 @@ public class DatePickerFragment extends DialogFragment implements
 		Calendar c = new GregorianCalendar(year, monthOfYear, dayOfMonth);
 		
 		String date = formatter.format(c.getTime());
-			
-		mCallback.onDateSet(date);
+		
+		mCallback.onDateSet(date, getTargetFragment(), args);
 	}
 
 }

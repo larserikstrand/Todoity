@@ -1,24 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="@dimen/default_list_item_height"
     android:background="?android:selectableItemBackground"
-    android:orientation="vertical" >
+    android:orientation="horizontal"
+    android:descendantFocusability="blocksDescendants" >
     
-    <TextView android:id="@+id/child_task_text"
-        android:layout_width="match_parent"
+    <LinearLayout android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:paddingLeft="?android:expandableListPreferredChildPaddingLeft"
-        android:paddingTop="5dp"
-        android:paddingBottom="2dp"
-        android:textAppearance="?android:textAppearanceMedium" />
+        android:layout_weight="1"
+        android:layout_gravity="center_vertical"
+        android:orientation="vertical" >
+
+        <TextView android:id="@+id/child_task_text"
+        	style="?android:textAppearanceMedium"
+        	android:layout_width="wrap_content"
+        	android:layout_height="wrap_content"
+        	android:paddingLeft="?android:expandableListPreferredChildPaddingLeft"
+        	android:fontFamily="sans-serif-condensed"
+       		android:textStyle="bold"
+        	android:ellipsize="end"
+        	android:maxLines="2"
+        	android:lineSpacingMultiplier="0.85" />
     
-    <TextView android:id="@+id/child_sub_text"
-        android:layout_width="match_parent"
+    	<TextView android:id="@+id/child_sub_text"
+        	style="?android:textAppearanceSmall"
+        	android:layout_width="wrap_content"
+        	android:layout_height="wrap_content"
+        	android:paddingLeft="?android:expandableListPreferredChildPaddingLeft"
+        	android:textColor="@android:color/secondary_text_dark"
+        	android:maxLines="1"
+        	android:singleLine="true"
+        	android:ellipsize="end" />
+        
+    </LinearLayout>
+    
+    <ImageButton android:id="@+id/child_options_button"
+        style="?android:borderlessButtonStyle"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:paddingLeft="?android:expandableListPreferredChildPaddingLeft"
-        android:paddingBottom="5dp"
-        android:textAppearance="?android:textAppearanceSmall"
-        android:textColor="@android:color/secondary_text_dark" />
+        android:layout_gravity="center_vertical"
+        android:src="@drawable/ic_action_core_overflow"
+        android:contentDescription="@string/options" />
 
 </LinearLayout>

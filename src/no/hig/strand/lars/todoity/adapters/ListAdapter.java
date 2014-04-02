@@ -7,7 +7,11 @@ import no.hig.strand.lars.todoity.activities.ListActivity;
 import no.hig.strand.lars.todoity.activities.TaskActivity;
 import no.hig.strand.lars.todoity.data.Constant;
 import no.hig.strand.lars.todoity.data.Task;
+import no.hig.strand.lars.todoity.helpers.DatabaseUtilities.DeleteTask;
+import no.hig.strand.lars.todoity.helpers.Utilities;
+import no.hig.strand.lars.todoity.helpers.Utilities.OnConfirmListener;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Paint;
 import android.view.LayoutInflater;
@@ -41,16 +45,24 @@ public class ListAdapter extends ArrayAdapter<Task> {
 	private OnClickListener mDeleteListener = new OnClickListener() {
 		@Override
 		public void onClick(View v) {
-			/*LinearLayout layout = (LinearLayout) v.getParent();
-			ListView listView = (ListView) layout.getParent();
-			int position = (Integer) layout.getTag();
-			Task task = mTasks.get(position);
-			mTasks.remove(position);
-			listView.setAdapter(new TaskListAdapter(context, mTasks));
-			new DatabaseUtilities.DeleteTask(
-					ListActivity.this, task, null).execute();
-			new AppEngineUtilities.RemoveTask(
-					ListActivity.this, task).execute();*/
+			final ViewHolder holder = (ViewHolder) 
+					((View) v.getParent()).getTag();
+			
+			// Show dialog to the user asking for confirmation of deletion.
+			String dialogMessage = 
+					holder.taskText.getText().toString() + " " +  
+					mContext.getString(R.string.delete_list_message);
+			Utilities.showConfirmDialog(mContext, null, 
+					dialogMessage, 
+					mContext.getString(R.string.delete), 
+					new OnConfirmListener() {
+				@Override
+				public void onConfirm(DialogInterface dialog, int id) {
+					Task task = mTasks.remove(holder.position);
+					notifyDataSetChanged();
+					new DeleteTask(mContext, task).execute();
+				}
+			});
 		}
 	};
 	

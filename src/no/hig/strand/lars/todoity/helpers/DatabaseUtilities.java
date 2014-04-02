@@ -86,6 +86,36 @@ public final class DatabaseUtilities {
 	
 	
 	
+	public static class MoveTask extends AsyncTask<Void, Void, Void> {
+		private TasksDatabase tasksDb;
+		private Task task;
+		private String date;
+
+		public MoveTask(Context context, Task task, String date) {
+			this.task = task;
+			tasksDb = TasksDatabase.getInstance(context);
+			this.date = date;
+		}
+
+		@Override
+		protected Void doInBackground(Void... params) {			
+			// Move the task to the selected date. 
+			//  Create list on that date if none exist.
+			long listId = tasksDb.getListIdByDate(date);
+			if (listId < 0) {
+				listId = tasksDb.insertList(date);
+			} 
+			
+			tasksDb.moveTaskToList(task.getId(), listId);
+			
+			// TODO AppEngine something...
+			
+			return null;
+		}
+	}
+	
+	
+	
 	// *************** Class for loading tasks from database ***************
 	
 	public interface OnTasksLoadedListener {

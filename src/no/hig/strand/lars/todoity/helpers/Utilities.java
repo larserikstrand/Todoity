@@ -81,7 +81,9 @@ public final class Utilities {
 			String message, String confirmText,
 			final OnConfirmListener callback) {
 		AlertDialog.Builder builder = new AlertDialog.Builder(context);
-		builder.setTitle(title);
+		if (title != null) {
+			builder.setTitle(title);
+		}
 		builder.setMessage(message);
 		builder.setPositiveButton(confirmText, new OnClickListener() {
 			@Override

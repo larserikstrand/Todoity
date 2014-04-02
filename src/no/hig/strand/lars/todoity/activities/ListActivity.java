@@ -10,12 +10,15 @@ import no.hig.strand.lars.todoity.data.Task;
 import no.hig.strand.lars.todoity.data.Task.TaskPriorityComparator;
 import no.hig.strand.lars.todoity.helpers.DatabaseUtilities;
 import no.hig.strand.lars.todoity.helpers.DatabaseUtilities.OnTasksLoadedListener;
+import no.hig.strand.lars.todoity.helpers.DatabaseUtilities.SaveTask;
+import no.hig.strand.lars.todoity.helpers.DatabaseUtilities.UpdateTask;
 import no.hig.strand.lars.todoity.helpers.DatePickerFragment;
 import no.hig.strand.lars.todoity.helpers.DatePickerFragment.OnDateSetListener;
 import no.hig.strand.lars.todoity.helpers.Utilities;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NavUtils;
 import android.view.MenuItem;
@@ -127,7 +130,7 @@ public class ListActivity extends FragmentActivity implements
 				mTasks.add(task);
 				mAdapter.notifyDataSetChanged();
 				
-				new DatabaseUtilities.SaveTask(this, task).execute();
+				new SaveTask(this, task).execute();
 			}
 			return;
 		case Constant.EDIT_TASK_REQUEST:
@@ -137,7 +140,7 @@ public class ListActivity extends FragmentActivity implements
 				
 				mTasks.set(position, task);
 				mAdapter.notifyDataSetChanged();
-				new DatabaseUtilities.UpdateTask(this, task).execute();
+				new UpdateTask(this, task).execute();
 			}
 			return;
 		}
@@ -147,7 +150,7 @@ public class ListActivity extends FragmentActivity implements
 	
 	
 	@Override
-	public void onDateSet(String date) {
+	public void onDateSet(String date, Fragment target, Bundle args) {
 		if (! mDate.getText().toString().equals(date)) {
 			mDate.setText(date);
 			new DatabaseUtilities.GetTasksByDateTask(this, date).execute();
