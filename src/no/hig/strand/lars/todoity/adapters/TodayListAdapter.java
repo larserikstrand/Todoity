@@ -7,10 +7,11 @@ import no.hig.strand.lars.todoity.R;
 import no.hig.strand.lars.todoity.activities.MainActivity;
 import no.hig.strand.lars.todoity.data.Task;
 import no.hig.strand.lars.todoity.fragments.TodayFragment;
-import no.hig.strand.lars.todoity.helpers.DatabaseUtilities;
+import no.hig.strand.lars.todoity.helpers.AppEngineUtilities.UpdateTask;
 import no.hig.strand.lars.todoity.views.DynamicListView;
 import android.content.Context;
 import android.graphics.Paint;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -36,23 +37,36 @@ public class TodayListAdapter extends ArrayAdapter<Task> {
 	
 	private final int INVALID_ID = -1;
 	
-	private OnClickListener mStartPauseListener = new OnClickListener() {
+	private OnClickListener mStartStopListener = new OnClickListener() {
 		@Override
 		public void onClick(View v) {
-			/*LinearLayout layout = (LinearLayout) v.getParent();
-			int position = (Integer) layout.getTag();
-			Task task = mTasks.get(position);
-			String text = ((Button) v).getText().toString();
-			if (text.equals(getString(R.string.start))) {
-				((Button) v).setText(getString(R.string.pause));
-				layout.setBackgroundColor(getResources()
-						.getColor(R.color.lightgreen));
-				startTask(task);
+			ViewHolder holder = (ViewHolder) ((View) v.getParent()).getTag();
+			
+			Task task = mTasks.get(holder.position);
+			
+			// If task is currently active, we need to pause it and update
+			//  the priorities.
+			if (task.isActive()) {
+				int lastActivePosition = holder.position;
+				for (int i = holder.position; i < mTasks.size() - 1; i++) {
+					if (mTasks.get(i + 1).isActive()) {
+						mTasks.get(i + 1).setPriority(i + 1);
+						lastActivePosition = i + 1;
+					}
+				}
+				task.setPriority(lastActivePosition + 1);
+				((TodayFragment) ((MainActivity) mContext)
+						.getFragmentAt(0)).stopTask(task);
+			// Task is not active. Start the task, move it to front and
+			//  update the priorities.
 			} else {
-				((Button) v).setText(getString(R.string.start));
-				layout.setBackgroundResource(0);
-				pauseTask(task);
-			}*/
+				task.setPriority(1);
+				for (int i = 0; i < holder.position; i++) {
+					mTasks.get(i).setPriority(i+2);
+				}
+				((TodayFragment) ((MainActivity) mContext)
+						.getFragmentAt(0)).startTask(task);
+			}
 		}
 	};
 	
@@ -60,29 +74,30 @@ public class TodayListAdapter extends ArrayAdapter<Task> {
 			new OnCheckedChangeListener() {
 		@Override
 		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-			LinearLayout layout = (LinearLayout) buttonView.getParent();
-			ViewHolder holder = (ViewHolder) layout.getTag();
+			ViewHolder holder = (ViewHolder) ((View) buttonView
+					.getParent()).getTag();
 			
 			Task task = mTasks.get(holder.position);
-			// When the task is checked and finished.
+			
 			if (isChecked) {
 				task.setFinished(true);
-				holder.startPauseButton.setText(mContext.getString(
-						R.string.start));
-				layout.setBackgroundResource(0);
-				setStrikeThrough(holder, true);
-				holder.startPauseButton.setEnabled(false);
-				//pauseTask(task);
+				task.setPriority(mTasks.size());
+				for (int i = holder.position + 1; i < mTasks.size(); i++) {
+					mTasks.get(i).setPriority(i);
+				}
+				((TodayFragment) ((MainActivity) mContext)
+						.getFragmentAt(0)).stopTask(task);
 			} else {
-				task.setFinished(false);
-				//new DatabaseUtilities.UpdateTask(
-				//		getActivity(), task).execute();
-				//new AppEngineUtilities.UpdateTask(
-				//		getActivity(), task).execute();
-				setStrikeThrough(holder, false);
-				holder.startPauseButton.setEnabled(true);
-				//((MainActivity)getActivity()).updateGeofences();
-				//recommend();
+				int lastFinishedPosition = holder.position;
+				for (int i = holder.position; i > 0; i--) {
+					if (mTasks.get(i - 1).isFinished()) {
+						mTasks.get(i - 1).setPriority(lastFinishedPosition + 1);
+						lastFinishedPosition = i - 1;
+					}
+				}
+				task.setPriority(lastFinishedPosition + 1);
+				((TodayFragment) ((MainActivity) mContext)
+						.getFragmentAt(0)).startTask(task);
 			}
 		}
 	};
@@ -90,18 +105,22 @@ public class TodayListAdapter extends ArrayAdapter<Task> {
 	private OnTouchListener mDragListener = new OnTouchListener() {
 		@Override
 		public boolean onTouch(View v, MotionEvent event) {
-			((TodayFragment) ((MainActivity) mContext)
-					.getFragmentAt(0)).stopActionMode();
-			DynamicListView listView;
-			switch (event.getAction() & MotionEvent.ACTION_MASK) {
-			case MotionEvent.ACTION_UP:
-				listView = (DynamicListView) v.getParent().getParent();
-				listView.touchEventsCancelled();
-				break;
-			case MotionEvent.ACTION_DOWN:
-				listView = (DynamicListView) v.getParent().getParent();
-				listView.startDrag(v, event);
-				break;
+			ViewHolder holder = (ViewHolder) ((View) v.getParent()).getTag();
+			Task task = mTasks.get(holder.position);
+			if (! task.isActive() && ! task.isFinished()) {
+				((TodayFragment) ((MainActivity) mContext)
+						.getFragmentAt(0)).stopActionMode();
+				DynamicListView listView;
+				switch (event.getAction() & MotionEvent.ACTION_MASK) {
+				case MotionEvent.ACTION_UP:
+					listView = (DynamicListView) v.getParent().getParent();
+					listView.touchEventsCancelled();
+					break;
+				case MotionEvent.ACTION_DOWN:
+					listView = (DynamicListView) v.getParent().getParent();
+					listView.startDrag(v, event);
+					break;
+				}
 			}
 			return false;
 		}
@@ -172,11 +191,9 @@ public class TodayListAdapter extends ArrayAdapter<Task> {
 		
 		// Color the layout if the task is active
 		if (task.isActive()) {
-			//convertView.setBackgroundColor(mContext.getResources()
-			//		.getColor(R.color.lightgreen));
-			holder.startPauseButton.setText(mContext.getString(R.string.pause));
+			setRowBackground(holder, true);
 		}
-		holder.startPauseButton.setOnClickListener(mStartPauseListener);
+		holder.startPauseButton.setOnClickListener(mStartStopListener);
 		
 		// Cross out the task if it is finished.
 		if (task.isFinished()) {
@@ -197,7 +214,7 @@ public class TodayListAdapter extends ArrayAdapter<Task> {
 	public void dragEnded() {
 		for (int i = 0; i < mTasks.size(); i++) {
 			mTasks.get(i).setPriority(i+1);
-			new DatabaseUtilities.UpdateTask(mContext, mTasks.get(i)).execute();
+			new UpdateTask(mContext, mTasks.get(i)).execute();
 		}
 		((MainActivity) mContext).updateNeighborFragments();
 	}
@@ -219,7 +236,24 @@ public class TodayListAdapter extends ArrayAdapter<Task> {
 	}
 
 
-
+	
+	private void setRowBackground(ViewHolder holder, boolean activate) {
+		LinearLayout row = (LinearLayout) holder.dragButton.getParent();
+		if (activate) {
+			holder.startPauseButton.setText(mContext.getString(R.string.pause));
+			row.setBackgroundColor(mContext.getResources()
+					.getColor(android.R.color.holo_green_dark));
+		} else {
+			holder.startPauseButton.setText(mContext.getString(R.string.start));
+			TypedValue typedValue = new TypedValue();
+			mContext.getTheme().resolveAttribute(android.R.attr
+					.activatedBackgroundIndicator, typedValue, true);
+			row.setBackgroundResource(typedValue.resourceId);
+		}
+	}
+	
+	
+	
 	private static class ViewHolder {
 		public TextView taskText;
 		public TextView subText;

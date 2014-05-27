@@ -2,7 +2,6 @@ package no.hig.strand.lars.todoity.data;
 
 import java.util.Comparator;
 
-import no.hig.strand.lars.todoity.helpers.Utilities;
 import android.os.Parcel;
 import android.os.Parcelable;
 

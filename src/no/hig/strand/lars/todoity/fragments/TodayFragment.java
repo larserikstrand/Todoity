@@ -1,6 +1,7 @@
 package no.hig.strand.lars.todoity.fragments;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 
 import no.hig.strand.lars.todoity.R;
@@ -16,8 +17,10 @@ import no.hig.strand.lars.todoity.helpers.DatabaseUtilities.MoveTask;
 import no.hig.strand.lars.todoity.helpers.DatabaseUtilities.UpdateTask;
 import no.hig.strand.lars.todoity.helpers.DatePickerFragment;
 import no.hig.strand.lars.todoity.helpers.DatePickerFragment.OnDateSetListener;
+import no.hig.strand.lars.todoity.helpers.Recommender;
 import no.hig.strand.lars.todoity.helpers.Utilities;
 import no.hig.strand.lars.todoity.helpers.Utilities.OnConfirmListener;
+import no.hig.strand.lars.todoity.services.ContextService;
 import no.hig.strand.lars.todoity.views.DynamicListView;
 import android.app.Activity;
 import android.content.DialogInterface;
@@ -47,7 +50,7 @@ public class TodayFragment extends Fragment implements OnDateSetListener {
 	private ActionMode mActionMode;
 	private int mSelectedTasks;
 	
-	public ProgressBar mProgress;
+	private ProgressBar mProgress;
 	
 	
 	@Override
@@ -233,6 +236,90 @@ public class TodayFragment extends Fragment implements OnDateSetListener {
 			((MainActivity) getActivity())
 					.updateNeighborFragments();
 		}
+	}
+	
+	
+	
+	public void startTask(Task task) {
+		if (task.isFinished()) {
+			task.setFinished(false);
+		} else {
+			task.setActive(true);
+			
+			// Get all the currently active tasks (to pass to the service).
+			ArrayList<Task> activeTasks = new ArrayList<Task>();
+			for (Task t : mTasks) {
+				if (t.isActive()) {
+					activeTasks.add(t);
+				}
+			}
+			
+			long timeNow = Calendar.getInstance().getTimeInMillis();
+			task.setTempStart(timeNow);
+			
+			if (Utilities.isGooglePlayServicesAvailable(getActivity())) {
+				Intent intent = new Intent(getActivity(), ContextService.class);
+				getActivity().startService(intent);
+			}
+		}
+		
+		// Priorities have been changed when starting or resuming a new task,
+		//  therefore we need to update them all.
+		for (Task t : mTasks) {
+			new UpdateTask(getActivity(), t).execute();
+		}
+		updateList(mTasks);
+		
+		recommend();
+	}
+	
+
+	
+	public void stopTask(Task task) {
+		// If task was stopped while being active. Log time.
+		if (task.isActive()) {
+			task.setActive(false);
+			
+			long timeNow = Calendar.getInstance().getTimeInMillis();
+			
+			if (timeNow - task.getTempStart() > Constant.MIN_TIME_TASK_START) {
+				if (task.getTimeStarted() == 0) {
+					task.setTimeStarted(task.getTempStart());
+				}
+				task.setTimeEnded(timeNow);
+				task.updateTimeSpent(timeNow - task.getTempStart());
+			}
+		}
+		
+		ArrayList<Task> activeTasks = new ArrayList<Task>();
+		for (Task t : mTasks) {
+			new UpdateTask(getActivity(), t).execute();
+			if (t.isActive()) {
+				activeTasks.add(t);
+			}
+		}
+		updateList(mTasks);
+		
+		if (activeTasks.isEmpty()) {
+			Intent intent = new Intent(getActivity(), ContextService.class);
+			getActivity().stopService(intent);
+		}
+		
+		recommend();
+	}
+	
+	
+	
+	private void recommend() {
+		if (Utilities.isGooglePlayServicesAvailable(getActivity())) {
+			Recommender.recommend(this);
+		}
+	}
+	
+	
+	
+	public ProgressBar getProgressBar() {
+		return mProgress;
 	}
 
 }

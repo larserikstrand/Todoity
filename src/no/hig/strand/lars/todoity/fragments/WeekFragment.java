@@ -118,7 +118,8 @@ public class WeekFragment extends Fragment implements OnDateSetListener {
 		protected ArrayList<Task> doInBackground(Void... params) {
 			ArrayList<Task> weekTasks = new ArrayList<Task>();
 			
-			ArrayList<String> dates = Utilities.getDatesForWeek();
+			ArrayList<String> dates = Utilities.getDates(
+					Constant.TASKS_TO_DISPLAY_IN_WEEK);
 			TaskPriorityComparator comparator = new TaskPriorityComparator();
 			ArrayList<Task> dateTasks;
 			for (String date : dates) {
@@ -145,7 +146,8 @@ public class WeekFragment extends Fragment implements OnDateSetListener {
 		String oldDate = task.getDate();
 		if (! date.equals(task.getDate())) {
 			ArrayList<Task> tasks = (ArrayList<Task>) mTasks.get(oldDate);
-			ArrayList<String> dates = Utilities.getDatesForWeek();
+			ArrayList<String> dates = Utilities.getDates(
+					Constant.TASKS_TO_DISPLAY_IN_WEEK);
 			if (dates.contains(date)) {
 				if (! mDates.contains(date)) {
 					mDates.add(date);

@@ -3,7 +3,8 @@
     android:id="@+id/list_item"
     android:layout_width="match_parent"
     android:layout_height="@dimen/default_list_item_height"
-    android:orientation="horizontal" >
+    android:orientation="horizontal"
+    android:descendantFocusability="blocksDescendants" >
     
     <LinearLayout android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -32,20 +33,12 @@
         
     </LinearLayout>
     
-    <ImageButton android:id="@+id/list_item_edit_button"
+    <ImageButton android:id="@+id/list_item_options_button"
         style="?android:borderlessButtonStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
-        android:src="@drawable/ic_content_edit"
-        android:contentDescription="@string/edit" />
-    
-    <ImageButton android:id="@+id/list_item_delete_button"
-        style="?android:borderlessButtonStyle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:src="@drawable/ic_content_discard"
-        android:contentDescription="@string/delete" />
+        android:src="@drawable/ic_action_core_overflow"
+        android:contentDescription="@string/options" />
 
 </LinearLayout>

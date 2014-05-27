@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="no.hig.strand.lars.todoity"
     android:versionCode="1"
@@ -45,10 +45,14 @@
         <activity
             android:name="no.hig.strand.lars.todoity.activities.ListActivity"
             android:label="@string/title_activity_list"
-            android:parentActivityName="no.hig.strand.lars.todoity.activities.MainActivity" >
+            android:parentActivityName="no.hig.strand.lars.todoity.activities.MainActivity"
+            android:uiOptions="splitActionBarWhenNarrow" >
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="no.hig.strand.lars.todoity.activities.MainActivity" />
+            <meta-data
+                android:name="android.support.UI_OPTIONS"
+                android:value="splitActionBarWhenNarrow" />
         </activity>
         <activity
             android:name="no.hig.strand.lars.todoity.activities.TaskActivity"
@@ -78,6 +82,33 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="no.hig.strand.lars.todoity.activities.MainActivity" />
         </activity>
+
+        <service
+            android:name="no.hig.strand.lars.todoity.services.ContextService"
+            android:enabled="true"
+            android:exported="false" >
+        </service>
+        <service
+            android:name="no.hig.strand.lars.todoity.services.LocationIntentService"
+            android:exported="false" >
+        </service>
+        <service
+            android:name="no.hig.strand.lars.todoity.services.ActivityIntentService"
+            android:exported="false" >
+        </service>
+        <service
+            android:name="no.hig.strand.lars.todoity.services.GeofenceTransitionIntentService"
+            android:exported="false" >
+        </service>
+
+        <receiver
+            android:name="no.hig.strand.lars.todoity.receivers.BootReceiver"
+            android:enabled="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
     </application>
 
 </manifest>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animation-list xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:drawable="@drawable/ic_notification_todoity" android:duration="60" />
+	<item android:drawable="@drawable/ic_notification_todoity1" android:duration="60" />
+	<item android:drawable="@drawable/ic_notification_todoity2" android:duration="60" />
+	<item android:drawable="@drawable/ic_notification_todoity3" android:duration="60" />
+	<item android:drawable="@drawable/ic_notification_todoity4" android:duration="60" />
+	<item android:drawable="@drawable/ic_notification_todoity5" android:duration="60" />
+	<item android:drawable="@drawable/ic_notification_todoity6" android:duration="60" />
+	<item android:drawable="@drawable/ic_notification_todoity7" android:duration="60" />
+</animation-list>

@@ -58,7 +58,7 @@ public class MainActivity extends FragmentActivity implements
 
 	@Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.main, menu);
+        getMenuInflater().inflate(R.menu.activity_main, menu);
         return true;
     }
     
@@ -125,12 +125,23 @@ public class MainActivity extends FragmentActivity implements
 	
 	
 	
+	/**
+	 * Returns the fragment at the specified position in the view pager if
+	 * it exists, null otherwise.
+	 * @param position
+	 * @return The Fragment at the specified position.
+	 */
 	public Fragment getFragmentAt(int position) {
 		return mTabsPagerAdapter.getRegisteredFragment(position);
 	}
 	
 	
 	
+	/**
+	 * Calls update on the fragments that are neighbors to the currently
+	 *  visible fragment in the view pager. This essentially rereads their
+	 *  data from the database and redraws the lists.
+	 */
 	public void updateNeighborFragments() {
 		Fragment fragment;
 		Fragment currentFragment = mTabsPagerAdapter.getRegisteredFragment(

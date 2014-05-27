@@ -21,6 +21,7 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NavUtils;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -35,7 +36,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
-import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -81,10 +82,21 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 	
 	
 	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.activity_task, menu);
+        return true;
+	}
+	
+	
+	
+	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case android.R.id.home:
 			NavUtils.navigateUpFromSameTask(this);
+			return true;
+		case R.id.action_save:
+			saveTask();
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
@@ -93,7 +105,7 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 	
 	
 	private void setupUI() {
-		LinearLayout container = (LinearLayout) findViewById(R.id.container);
+		ScrollView container = (ScrollView) findViewById(R.id.container);
 		container.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -222,15 +234,6 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 		if (! mTask.getFixedEnd().equals("")) {
 			button.setText(mTask.getFixedEnd());
 		}
-		
-		// Set behavior of the done/finish button.
-		button = (Button) findViewById(R.id.save_button);
-		button.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				saveTask();
-			}
-		});
 	}
 	
 	

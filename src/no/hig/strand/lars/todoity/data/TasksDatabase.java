@@ -2,6 +2,7 @@ package no.hig.strand.lars.todoity.data;
 
 import java.util.ArrayList;
 
+import no.hig.strand.lars.todoity.data.TaskContract.ContextEntry;
 import no.hig.strand.lars.todoity.data.TaskContract.ListEntry;
 import no.hig.strand.lars.todoity.data.TaskContract.TaskEntry;
 import no.hig.strand.lars.todoity.data.TaskContract.TimesEntry;
@@ -29,18 +30,13 @@ public class TasksDatabase {
 	
 	public TasksDatabase(Context context) {
 		mDbHelper = new DatabaseHelper(context);
+		open();
 	}
 	
 	
 	
 	private void open() {
 		mDb = mDbHelper.getWritableDatabase();
-	}
-	
-	
-	
-	private void close() {
-		mDbHelper.close();
 	}
 	
 	
@@ -169,15 +165,12 @@ public class TasksDatabase {
 	
 	
 	public long getListIdByDate(String date) {
-		open();
-		
 		long listId = -1;
 		Cursor c1 = fetchListByDate(date);
 		if (c1.moveToFirst()) {
 			listId = c1.getLong(c1.getColumnIndexOrThrow(ListEntry._ID));
 		}
 		
-		close();
 		return listId;
 	}
 	
@@ -185,7 +178,6 @@ public class TasksDatabase {
 	
 	public ArrayList<String> getListDates() {
 		ArrayList<String> dates = new ArrayList<String>();
-		open();
 		
 		Cursor c1 = mDb.query(ListEntry.TABLE_NAME, null, null, 
 				null, null, null, null);
@@ -196,7 +188,6 @@ public class TasksDatabase {
 			} while (c1.moveToNext());
 		}
 		
-		close();
 		return dates;
 	}
 	
@@ -204,7 +195,6 @@ public class TasksDatabase {
 	
 	public ArrayList<Task> getTasksByDate(String date) {
 		ArrayList<Task> tasks = new ArrayList<Task>();
-		open();
 		
 		Cursor c1 = fetchListByDate(date);
 		if (c1.moveToFirst()) {
@@ -216,7 +206,6 @@ public class TasksDatabase {
 					new String[] { listId }, null, null, null);
 			
 			if (c1.moveToFirst()) {
-				
 				Task task;
 				do {
 					task = getTaskFromCursor(c1, true);
@@ -226,7 +215,6 @@ public class TasksDatabase {
 			}
 		}
 		
-		close();
 		return tasks;
 	}
 	
@@ -234,13 +222,11 @@ public class TasksDatabase {
 	
 	public ArrayList<Task> getTasks() {
 		ArrayList<Task> tasks = new ArrayList<Task>();
-		open();
 		
 		Cursor c1 = mDb.query(TaskEntry.TABLE_NAME, null, null,
 				null, null, null, null);
 		
 		if (c1.moveToFirst()) {
-			
 			Task task;
 			do {
 				task = getTaskFromCursor(c1, false);
@@ -248,8 +234,60 @@ public class TasksDatabase {
 			} while (c1.moveToNext());
 		}
 		
-		close();
 		return tasks;
+	}
+	
+	
+	
+	public ArrayList<Task> getActiveTasks() {
+		ArrayList<Task> tasks = new ArrayList<Task>();
+		
+		Cursor c1 = mDb.query(TaskEntry.TABLE_NAME, null, 
+				TaskEntry.COLUMN_NAME_IS_ACTIVE + " = ? ",
+				new String[] { "1" },
+				null, null, null);
+		
+		if (c1.moveToFirst()) {
+			Task task;
+			do {
+				task = getTaskFromCursor(c1, false);
+				tasks.add(task);
+			} while (c1.moveToNext());
+		}
+		
+		return tasks;
+	}
+	
+	
+	
+	public ArrayList<Task> getTaskHistory() {
+		ArrayList<Task> tasks = new ArrayList<Task>();
+		
+		Cursor c1 = mDb.query(TaskEntry.TABLE_NAME, null, 
+				TaskEntry.COLUMN_NAME_IS_FINISHED + " = ? ",
+				new String[] { "1" },
+				null, null, null);
+		
+		if (c1.moveToFirst()) {
+			Task task;
+			do {
+				task = getTaskFromCursor(c1, false);
+				tasks.add(task);
+			} while (c1.moveToNext());
+		}
+		
+		return tasks;
+	}
+	
+	
+	
+	public Task getTaskById(String taskId) {
+		Cursor c1 = mDb.query(TaskEntry.TABLE_NAME, null, 
+				TaskEntry._ID + " = ? ",
+				new String[] { taskId }, null, null, null);
+		Task task = getTaskFromCursor(c1, false);
+		
+		return task;
 	}
 	
 	
@@ -263,24 +301,49 @@ public class TasksDatabase {
 	
 	
 	
+	public ArrayList<TaskContext> getContextByTaskId(int taskId, String type) {
+		ArrayList<TaskContext> contexts = new ArrayList<TaskContext>();
+		
+		Cursor c1 = mDb.query(ContextEntry.TABLE_NAME, null, 
+				ContextEntry.COLUMN_NAME_TASK + " = ? AND " + 
+				ContextEntry.COLUMN_NAME_TYPE + " = ? ", 
+				new String[] { Integer.toString(taskId), type },
+				null, null, null);
+		
+		if (c1.moveToFirst()) {
+			do {
+				TaskContext taskContext = new TaskContext();
+				taskContext.setTaskId(taskId);
+				taskContext.setType(type);
+				String context = c1.getString(c1.getColumnIndexOrThrow(
+						ContextEntry.COLUMN_NAME_CONTEXT));
+				taskContext.setContext(context);
+				String details = c1.getString(c1.getColumnIndexOrThrow(
+						ContextEntry.COLUMN_NAME_DETAILS));
+				taskContext.setDetails(details);
+				
+				contexts.add(taskContext);
+			} while (c1.moveToNext());
+		}
+		
+		return contexts;
+	}
+	
+	
+	
 	//*************** INSERTION QUERIES ***************
 	
 	public long insertList(String date) {
-		open();
-		
 		ContentValues values = new ContentValues();
 		values.put(ListEntry.COLUMN_NAME_DATE, date);
 		long listId = mDb.insert(ListEntry.TABLE_NAME, null, values);
 		
-		close();
 		return listId; 
 	}
 	
 	
 	
 	public long insertTask(long listId, Task task) {
-		open();
-		
 		ContentValues values = getContentCaluesFromTask(task);
 		values.put(TaskEntry.COLUMN_NAME_LIST, listId);
 		
@@ -290,7 +353,6 @@ public class TasksDatabase {
 			insertTimes(taskId, task.getFixedStart(), task.getFixedEnd());
 		}
 		
-		close();
 		return taskId;
 	}
 	
@@ -306,11 +368,22 @@ public class TasksDatabase {
 	
 	
 	
+	public long insertContext(TaskContext context) {
+		ContentValues values = new ContentValues();
+		values.put(ContextEntry.COLUMN_NAME_TASK, context.getTaskId());
+		values.put(ContextEntry.COLUMN_NAME_TYPE, context.getType());
+		values.put(ContextEntry.COLUMN_NAME_CONTEXT, context.getContext());
+		values.put(ContextEntry.COLUMN_NAME_DETAILS, context.getDetails());
+		long id = mDb.insert(ContextEntry.TABLE_NAME, null, values);
+		
+		return id;
+	}
+	
+	
+	
 	//*************** DELETION QUERIES ***************
 	
 	public boolean deleteTaskById(int taskId) {
-		open();
-		
 		long listId = getListIfLastTask(taskId);
 		if (listId != -1) {
 			mDb.delete(ListEntry.TABLE_NAME, 
@@ -326,7 +399,6 @@ public class TasksDatabase {
 				TaskEntry._ID + " = ? ",
 				new String[] { Integer.toString(taskId) });
 		
-		close();
 		return result > 0 ? true : false;
 	}
 	
@@ -344,8 +416,6 @@ public class TasksDatabase {
 	//*************** UPDATE QUERIES ***************
 	
 	public boolean updateTask(Task task) {
-		open();
-		
 		ContentValues values = getContentCaluesFromTask(task);
 		int result = mDb.update(TaskEntry.TABLE_NAME, values,
 				TaskEntry._ID + " = ?", 
@@ -371,15 +441,12 @@ public class TasksDatabase {
 			deleteTimes(task.getId());
 		}
 		
-		close();
 		return result > 0 ? true : false;
 	}
 	
 	
 	
 	public boolean moveTaskToList(int taskId, long toListId) {
-		open();
-		
 		long fromListId = getListIfLastTask(taskId);
 		if (fromListId != -1) {
 			mDb.delete(ListEntry.TABLE_NAME, 
@@ -392,7 +459,6 @@ public class TasksDatabase {
 				TaskEntry._ID + " = ?", 
 				new String[] { Integer.toString(taskId) });
 		
-		close();
 		return result > 0 ? true : false;
 	}
 }

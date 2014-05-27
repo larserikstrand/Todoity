@@ -10,12 +10,4 @@
         android:layout_weight="1"
         android:name="com.google.android.gms.maps.SupportMapFragment"/>
     
-    <Button android:id="@+id/done_button"
-        style="?android:buttonBarButtonStyle"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:drawableTop="@drawable/ic_navigation_accept"
-        android:text="@string/done"
-        android:textAppearance="?android:textAppearanceSmall" />
-    
 </LinearLayout>

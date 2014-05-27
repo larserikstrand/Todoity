@@ -336,6 +336,10 @@ public class DynamicListView extends ListView {
         if (isBelow || isAbove) {
 
             final long switchItemID = isBelow ? mBelowItemId : mAboveItemId;
+            Task switchTask = mTaskList.get((int) switchItemID);
+            if (switchTask.isActive() || switchTask.isFinished()) {
+            	return;
+            }
             View switchView = isBelow ? belowView : aboveView;
             final int originalItem = getPositionForView(mobileView);
 
@@ -343,7 +347,7 @@ public class DynamicListView extends ListView {
                 updateNeighborViewsForID(mMobileItemId);
                 return;
             }
-
+            
             swapElements(mTaskList, originalItem, getPositionForView(switchView));
 
             ((TodayListAdapter) getAdapter()).notifyDataSetChanged();

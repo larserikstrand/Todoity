@@ -6,10 +6,8 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NavUtils;
+import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
 
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMap.OnMapClickListener;
@@ -50,9 +48,15 @@ public class MapActivity extends FragmentActivity {
 	 * Set up the {@link android.app.ActionBar}.
 	 */
 	private void setupActionBar() {
-
 		getActionBar().setDisplayHomeAsUpEnabled(true);
-
+	}
+	
+	
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.activity_map, menu);
+        return true;
 	}
 	
 	
@@ -62,6 +66,14 @@ public class MapActivity extends FragmentActivity {
 		switch (item.getItemId()) {
 		case android.R.id.home:
 			NavUtils.navigateUpFromSameTask(this);
+			return true;
+		case R.id.action_done:
+			if (mLocation != null) {
+				Intent data = new Intent();
+				data.putExtra(Constant.LOCATION_EXTRA, mLocation);
+				setResult(RESULT_OK, data);
+			}
+			finish();
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
@@ -83,19 +95,6 @@ public class MapActivity extends FragmentActivity {
 				mLocation = latLng;
 				mMarkerOptions.position(mLocation);
 				mMap.addMarker(mMarkerOptions);
-			}
-		});
-		
-		Button button = (Button) findViewById(R.id.done_button);
-		button.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				if (mLocation != null) {
-					Intent data = new Intent();
-					data.putExtra(Constant.LOCATION_EXTRA, mLocation);
-					setResult(RESULT_OK, data);
-				}
-				finish();
 			}
 		});
 	}

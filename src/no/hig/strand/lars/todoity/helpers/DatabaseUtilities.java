@@ -3,6 +3,7 @@ package no.hig.strand.lars.todoity.helpers;
 import java.util.ArrayList;
 
 import no.hig.strand.lars.todoity.data.Task;
+import no.hig.strand.lars.todoity.data.TaskContext;
 import no.hig.strand.lars.todoity.data.TasksDatabase;
 import android.content.Context;
 import android.os.AsyncTask;
@@ -35,17 +36,20 @@ public final class DatabaseUtilities {
 			long taskId = tasksDb.insertTask(listId, task);
 			task.setId((int) taskId);
 			
-			// TODO new AppEngineUtilities.SaveTask(context, task).execute();
-			
 			return null;
+		}
+
+		@Override
+		protected void onPostExecute(Void result) {
+			new AppEngineUtilities.SaveTask(context, task).execute();
 		}
 	}
 	
 	
 	
 	public static class DeleteTask extends AsyncTask<Void, Void, Void> {
-		TasksDatabase tasksDb;
-		Task task;
+		private TasksDatabase tasksDb;
+		private Task task;
 		private Context context;
 		
 		public DeleteTask(Context context, Task task) {
@@ -57,9 +61,13 @@ public final class DatabaseUtilities {
 		@Override
 		protected Void doInBackground(Void... params) {
 			tasksDb.deleteTaskById(task.getId());
-			// TODO new AppEngineUtilities.DeleteTask(context, task).execute();
 			
 			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(Void result) {
+			new AppEngineUtilities.RemoveTask(context, task).execute();
 		}
 	}
 	
@@ -68,9 +76,11 @@ public final class DatabaseUtilities {
 	public static class UpdateTask extends AsyncTask<Void, Void, Void> {
 		private TasksDatabase tasksDb;
 		private Task task;
+		private Context context;
 		
 		public UpdateTask(Context context, Task task) {
 			this.task = task;
+			this.context = context;
 			tasksDb = TasksDatabase.getInstance(context);
 		}
 
@@ -78,9 +88,39 @@ public final class DatabaseUtilities {
 		protected Void doInBackground(Void... params) {
 			tasksDb.updateTask(task);
 			
-			// TODO AppEngine call.
-			
 			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(Void result) {
+			new AppEngineUtilities.UpdateTask(context, task).execute();
+		}
+	}
+	
+	
+	
+	public static class UpdateMultipleTask extends AsyncTask<Void, Void, Void> {
+		private Context context;
+		private ArrayList<Task> tasks;
+		
+		public UpdateMultipleTask(Context context, ArrayList<Task> tasks) {
+			this.context = context;
+			this.tasks = tasks;
+		}
+		
+		@Override
+		protected Void doInBackground(Void... params) {
+			for (Task task: tasks) {
+				if (! isCancelled()) {
+					new UpdateTask(context, task).execute();
+				}
+			}
+			return null;
+		}
+
+		@Override
+		protected void onPostExecute(Void result) {
+			super.onPostExecute(result);
 		}
 	}
 	
@@ -88,10 +128,12 @@ public final class DatabaseUtilities {
 	
 	public static class MoveTask extends AsyncTask<Void, Void, Void> {
 		private TasksDatabase tasksDb;
+		private Context context;
 		private Task task;
 		private String date;
 
 		public MoveTask(Context context, Task task, String date) {
+			this.context = context;
 			this.task = task;
 			tasksDb = TasksDatabase.getInstance(context);
 			this.date = date;
@@ -104,14 +146,51 @@ public final class DatabaseUtilities {
 			long listId = tasksDb.getListIdByDate(date);
 			if (listId < 0) {
 				listId = tasksDb.insertList(date);
-			} 
+			}
 			
+			task.setDate(date);
 			tasksDb.moveTaskToList(task.getId(), listId);
-			
-			// TODO AppEngine something...
 			
 			return null;
 		}
+		
+		@Override
+		protected void onPostExecute(Void result) {
+			new AppEngineUtilities.UpdateTask(context, task);
+		}
+	}
+	
+	
+	
+	public static class SaveContextTask extends AsyncTask<Void, Void, Void> {
+		private Context context;
+		private TaskContext taskContext;
+
+		public SaveContextTask(Context context, TaskContext taskContext) {
+			this.context = context;
+			this.taskContext = taskContext;
+		}
+
+		@Override
+		protected Void doInBackground(Void... params) {			
+			saveContext(context, taskContext);
+			
+			return null;
+		}
+		
+		@Override
+		protected void onPostExecute(Void result) {
+			new AppEngineUtilities.SaveContextTask(
+					context, taskContext).execute();
+		}
+	}
+	
+	
+	
+	public static void saveContext(Context context, TaskContext taskContext) {
+		TasksDatabase tasksDb = TasksDatabase.getInstance(context);
+		tasksDb.insertContext(taskContext);
+		AppEngineUtilities.saveContext(context, taskContext);
 	}
 	
 	

@@ -9,6 +9,7 @@ import no.hig.strand.lars.todoity.data.Constant;
 import no.hig.strand.lars.todoity.data.Task;
 import no.hig.strand.lars.todoity.data.Task.TaskPriorityComparator;
 import no.hig.strand.lars.todoity.helpers.DatabaseUtilities;
+import no.hig.strand.lars.todoity.helpers.DatabaseUtilities.MoveTask;
 import no.hig.strand.lars.todoity.helpers.DatabaseUtilities.OnTasksLoadedListener;
 import no.hig.strand.lars.todoity.helpers.DatabaseUtilities.SaveTask;
 import no.hig.strand.lars.todoity.helpers.DatabaseUtilities.UpdateTask;
@@ -21,10 +22,8 @@ import android.support.v4.app.DialogFragment;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.app.NavUtils;
+import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -60,8 +59,6 @@ public class ListActivity extends FragmentActivity implements
 		
 		new DatabaseUtilities.GetTasksByDateTask(
 				this, mDate.getText().toString()).execute();
-		
-		setupUI();
 	}
 
 	
@@ -76,46 +73,34 @@ public class ListActivity extends FragmentActivity implements
 	
 	
 	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		getMenuInflater().inflate(R.menu.activity_list, menu);
+        return true;
+	}
+
+
+
+	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		switch (item.getItemId()) {
 		case android.R.id.home:
 			NavUtils.navigateUpFromSameTask(this);
 			return true;
+		case R.id.action_change_date:
+			DialogFragment datePicker = new DatePickerFragment();
+			datePicker.show(getSupportFragmentManager(), "datePicker");
+			return true;
+		case R.id.action_new_task:
+			Intent intent = new Intent(ListActivity.this, TaskActivity.class);
+			startActivityForResult(intent, Constant.NEW_TASK_REQUEST);
+			return true;
+		case R.id.action_done:
+			finish();
+			return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
 	
-	
-	
-	private void setupUI() {
-		Button button = (Button) findViewById(R.id.date_button);
-		button.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				DialogFragment datePicker = new DatePickerFragment();
-				datePicker.show(getSupportFragmentManager(), "datePicker");
-			}
-		});
-		
-		button = (Button) findViewById(R.id.new_task_button);
-		button.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				Intent intent = new Intent(ListActivity.this,
-						TaskActivity.class);
-				startActivityForResult(intent, Constant.NEW_TASK_REQUEST);
-			}
-		});
-		
-		button = (Button) findViewById(R.id.done_button);
-		button.setOnClickListener(new OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				finish();
-			}
-		});
-	}
-
 	
 	
 	@Override
@@ -128,6 +113,7 @@ public class ListActivity extends FragmentActivity implements
 				task.setDate(mDate.getText().toString());
 				
 				mTasks.add(task);
+				task.setPriority(mTasks.size());
 				mAdapter.notifyDataSetChanged();
 				
 				new SaveTask(this, task).execute();
@@ -152,8 +138,16 @@ public class ListActivity extends FragmentActivity implements
 	@Override
 	public void onDateSet(String date, Fragment target, Bundle args) {
 		if (! mDate.getText().toString().equals(date)) {
-			mDate.setText(date);
-			new DatabaseUtilities.GetTasksByDateTask(this, date).execute();
+			if (args != null) {
+				Task task = args.getParcelable(Constant.TASK_EXTRA);
+				task.setDate(date);
+				mTasks.remove(task);
+				mAdapter.notifyDataSetChanged();
+				new MoveTask(this, task, date).execute();
+			} else {
+				mDate.setText(date);
+				new DatabaseUtilities.GetTasksByDateTask(this, date).execute();
+			}
 		}
 	}
 
