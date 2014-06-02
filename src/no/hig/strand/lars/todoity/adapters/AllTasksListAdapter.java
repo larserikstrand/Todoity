@@ -33,6 +33,11 @@ import android.widget.PopupMenu;
 import android.widget.PopupMenu.OnMenuItemClickListener;
 import android.widget.TextView;
 
+/**
+ * Class used for handling the logic in the list that displays all tasks.
+ * @author LarsErik
+ *
+ */
 public class AllTasksListAdapter extends BaseExpandableListAdapter implements 
 		OnMenuItemClickListener {
 	
@@ -44,12 +49,15 @@ public class AllTasksListAdapter extends BaseExpandableListAdapter implements
 	private ChildViewHolder mCurrentHolder;
 	private Task mCurrentTask;
 	
+	// Edit button functionality.
 	private OnClickListener mEditListener = new OnClickListener() {
 		@Override
 		public void onClick(View v) {
+			// Get the data in the group list item.
 			GroupViewHolder holder = (GroupViewHolder) 
 					((View) v.getParent()).getTag();
 			
+			// Start the TaskActivity for editing the task.
 			Intent intent = new Intent(mContext, ListActivity.class);
 			intent.putExtra(Constant.DATE_EXTRA, 
 					holder.dateText.getText().toString());
@@ -58,12 +66,15 @@ public class AllTasksListAdapter extends BaseExpandableListAdapter implements
 		}
 	};
 	
+	// Delete button functionality.
 	private OnClickListener mDeleteListener = new OnClickListener() {
 		@Override
 		public void onClick(View v) {
+			// Get data in group list item.
 			final GroupViewHolder holder = (GroupViewHolder) 
 					((View) v.getParent()).getTag();
 			
+			// Create a confirm dialog, asking for confirmation of deletion.
 			String dialogTitle = mContext.getString(R.string.delete) + " " + 
 					mTasks.get(mDates.get(holder.position)).size() + " " + 
 					mContext.getString(R.string.tasks);
@@ -75,6 +86,8 @@ public class AllTasksListAdapter extends BaseExpandableListAdapter implements
 					mContext.getString(R.string.delete), new OnConfirmListener() {
 				@Override
 				public void onConfirm(DialogInterface dialog, int id) {
+					// When user confirms deletion, remove tasks from list and
+					//  delete them from database.
 					List<Task> tasks = mTasks.remove(mDates.get(holder.position));
 					mDates.remove(holder.position);
 					notifyDataSetChanged();
@@ -88,15 +101,18 @@ public class AllTasksListAdapter extends BaseExpandableListAdapter implements
 		}
 	};
 	
+	// Options button functionality. For individual tasks.
 	private OnClickListener mOptionsListener = new OnClickListener() {
 		@Override
 		public void onClick(View v) {
+			// Update reference to the list item (to be used later).
 			mCurrentHolder = (ChildViewHolder) ((View) v.getParent()).getTag();
 			mCurrentTask = (Task) getChild(mCurrentHolder.groupPosition, 
 					mCurrentHolder.childPosition);
 			showPopupMenu(v);
 		}
 	};
+	
 	
 	
 	public AllTasksListAdapter(Context context, List<String> dates, 
@@ -130,8 +146,10 @@ public class AllTasksListAdapter extends BaseExpandableListAdapter implements
 	@Override
 	public View getChildView(int groupPosition, int childPosition,
 			boolean isLastChild, View convertView, ViewGroup parent) {
+		// Use holder pattern (for more efficient rendering with large lists).
 		ChildViewHolder holder;
 		
+		// Create list item if it does not exist.
 		if (convertView == null) {
 			convertView = mInflater.inflate(
 					R.layout.adapter_expandablelist_child, parent, false);
@@ -156,6 +174,7 @@ public class AllTasksListAdapter extends BaseExpandableListAdapter implements
 		holder.taskText.setText(Task.getTaskTextFromTask(task));
 		holder.subText.setText(Task.getSubTextFromTask(task));
 		
+		// Set task finished status.
 		if (task.isFinished()) {
 			holder.optionsButton.setVisibility(View.GONE);
 			setStrikeThrough(holder, true);
@@ -165,7 +184,7 @@ public class AllTasksListAdapter extends BaseExpandableListAdapter implements
 		}
 		
 		if (task.isActive()) {
-			
+			// TODO: Highlight task?
 		}
 		
 		return convertView;
@@ -201,9 +220,13 @@ public class AllTasksListAdapter extends BaseExpandableListAdapter implements
 	
 	
 	
+	/**
+	 * Function that returns the group view that holds a set of tasks.
+	 */
 	@Override
 	public View getGroupView(int groupPosition, boolean isExpanded,
 			View convertView, ViewGroup parent) {
+		// Use holder pattern (for more efficient rendering with large lists).
 		GroupViewHolder holder;
 		
 		if (convertView == null) {
@@ -228,7 +251,9 @@ public class AllTasksListAdapter extends BaseExpandableListAdapter implements
 		holder.dateText.setText(date);
 		
 		// Find the date of the tasks in milliseconds. 
-		//  The buttons should be hidden for tasks older than today.
+		//  The buttons should be hidden for tasks older than today
+		//  (we don't want the user to delete the task history, as this is
+		//  important for the research).
 		long dateInMillis = Utilities.dateToMillis(date);
 		
 		if (mTodayInMillis > dateInMillis) {
@@ -267,6 +292,7 @@ public class AllTasksListAdapter extends BaseExpandableListAdapter implements
 	
 	
 	
+	// Set strikethrough on the holder passed as parameter (finished tasks).
 	private void setStrikeThrough(ChildViewHolder holder, boolean isFinished) {
 		if (isFinished) {
 			holder.taskText.setPaintFlags(holder.taskText.getPaintFlags() 
@@ -302,6 +328,10 @@ public class AllTasksListAdapter extends BaseExpandableListAdapter implements
 
 	
 	
+	/**
+	 * Displays a popup menu anchored at the view given as parameter.
+	 * @param v - The View to attach the popup menu to.
+	 */
 	private void showPopupMenu(View v) {
 		PopupMenu popup = new PopupMenu(mContext, v);
 		MenuInflater inflater = popup.getMenuInflater();
@@ -312,11 +342,15 @@ public class AllTasksListAdapter extends BaseExpandableListAdapter implements
 	
 
 
+	/**
+	 * Handle popup menu item clicks.
+	 */
 	@Override
 	public boolean onMenuItemClick(MenuItem item) {
 		switch (item.getItemId()) {
 		
 		case R.id.options_edit:
+			// Start TaskActivity to edit the given task.
 			Intent intent = new Intent(mContext, TaskActivity.class);
 			intent.putExtra(Constant.TASK_EXTRA, mCurrentTask);
 			intent.putExtra(Constant.POSITION_EXTRA, mCurrentHolder.childPosition);
@@ -325,15 +359,17 @@ public class AllTasksListAdapter extends BaseExpandableListAdapter implements
 			return true;
 			
 		case R.id.options_move:
+			// Display a DatePicker for moving the task to another date.
 			DialogFragment datePicker = new DatePickerFragment();
 			Bundle args = new Bundle();
 			args.putString(Constant.DATEPICKER_TITLE_EXTRA, 
 					mContext.getString(R.string.move_task));
 			args.putParcelable(Constant.TASK_EXTRA, mCurrentTask);
 			datePicker.setArguments(args);
+			// Set the target fragment for the result. Communication should
+			//  go via MainActivity.
 			datePicker.setTargetFragment(((MainActivity) mContext)
-					.getFragmentAt(2),
-					Constant.MOVE_TASK_REQUEST);
+					.getFragmentAt(2), Constant.MOVE_TASK_REQUEST);
 			datePicker.show(((MainActivity) mContext)
 					.getSupportFragmentManager(), "datePicker");
 			return true;

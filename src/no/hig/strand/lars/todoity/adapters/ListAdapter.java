@@ -29,6 +29,11 @@ import android.widget.PopupMenu;
 import android.widget.PopupMenu.OnMenuItemClickListener;
 import android.widget.TextView;
 
+/**
+ * Class that handles the logic of the list in ListActivity.
+ * @author LarsErik
+ *
+ */
 public class ListAdapter extends ArrayAdapter<Task> implements 
 		OnMenuItemClickListener {
 
@@ -38,6 +43,7 @@ public class ListAdapter extends ArrayAdapter<Task> implements
 	private ViewHolder mCurrentHolder;
 	private Task mCurrentTask;
 	
+	// Functionality of the options button.
 	private OnClickListener mOptionsListener = new OnClickListener() {
 		@Override
 		public void onClick(View v) {
@@ -60,8 +66,10 @@ public class ListAdapter extends ArrayAdapter<Task> implements
 	
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
+		// Use recommended holder pattern (faster rendering for large lists).
 		ViewHolder holder;
 		
+		// Inflate the view if it does not exist.
 		if (convertView == null) {
 			convertView = mInflater.inflate(
 					R.layout.adapter_list, parent, false);
@@ -97,6 +105,10 @@ public class ListAdapter extends ArrayAdapter<Task> implements
 	
 	
 	
+	/**
+	 * Sets strikethrough on the text inside the given ViewHolder.
+	 * @param holder - The ViewHolder containing the text to strike through.
+	 */
 	private void setStrikeThrough(ViewHolder holder) {
 		holder.taskText.setPaintFlags(holder.taskText.getPaintFlags() 
 				| Paint.STRIKE_THRU_TEXT_FLAG);
@@ -115,6 +127,10 @@ public class ListAdapter extends ArrayAdapter<Task> implements
 
 
 	
+	/**
+	 * Show a popup menu anchored at the View given as parameter.
+	 * @param v - The View where the menu should be anchored.
+	 */
 	private void showPopupMenu(View v) {
 		PopupMenu popup = new PopupMenu(mContext, v);
 		MenuInflater inflater = popup.getMenuInflater();
@@ -127,7 +143,7 @@ public class ListAdapter extends ArrayAdapter<Task> implements
 
 	@Override
 	public boolean onMenuItemClick(MenuItem item) {
-switch (item.getItemId()) {
+		switch (item.getItemId()) {
 		
 		case R.id.options_edit:
 			Intent intent = new Intent(mContext, TaskActivity.class);

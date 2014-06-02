@@ -15,6 +15,12 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+/**
+ * Activity for displaying and choosing/editing a location
+ *  for a task on a map.
+ * @author LarsErik
+ *
+ */
 public class MapActivity extends FragmentActivity {
 
 	private GoogleMap mMap;
@@ -34,6 +40,7 @@ public class MapActivity extends FragmentActivity {
 				.findFragmentById(R.id.map)).getMap();
 		mLocation = null;
 		mMarkerOptions = new MarkerOptions();
+		// Display the current location of the task (if any).
 		if (data.hasExtra(Constant.LOCATION_EXTRA)) {
 			mLocation = data.getParcelableExtra(Constant.LOCATION_EXTRA);
 			mMarkerOptions.position(mLocation);
@@ -67,7 +74,9 @@ public class MapActivity extends FragmentActivity {
 		case android.R.id.home:
 			NavUtils.navigateUpFromSameTask(this);
 			return true;
+		// The Done button is pressed.
 		case R.id.action_done:
+			// If location is selected, send it back to parent activity. 
 			if (mLocation != null) {
 				Intent data = new Intent();
 				data.putExtra(Constant.LOCATION_EXTRA, mLocation);
@@ -82,6 +91,7 @@ public class MapActivity extends FragmentActivity {
 	
 	
 	private void setupUI() {
+		// Enable 'To my location' button.
 		mMap.setMyLocationEnabled(true);
 		
 		if (mLocation != null) {
@@ -89,6 +99,7 @@ public class MapActivity extends FragmentActivity {
 		}
 		
 		mMap.setOnMapClickListener(new OnMapClickListener() {
+			// Set location and place a marker on map click.
 			@Override
 			public void onMapClick(LatLng latLng) {
 				mMap.clear();

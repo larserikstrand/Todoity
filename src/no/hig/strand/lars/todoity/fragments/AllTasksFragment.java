@@ -24,6 +24,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ExpandableListView;
 
+/**
+ * Fragment class used for displaying all tasks (including old tasks).
+ * @author LarsErik
+ *
+ */
 public class AllTasksFragment extends Fragment implements OnDateSetListener {
 
 	private View mRootView;

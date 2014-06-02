@@ -42,6 +42,11 @@ import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
 
+/**
+ * Activity for viewing, editing or creating a single task.
+ * @author LarsErik
+ *
+ */
 public class TaskActivity extends FragmentActivity implements OnTimeSetListener {
 
 	private Task mTask;
@@ -60,6 +65,8 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 		setupActionBar();
 		
 		Intent data = getIntent();
+		// Check if data exists for this task, ie. the
+		//  task is being edited.
 		mPosition = data.getIntExtra(Constant.POSITION_EXTRA, -1);
 		if (data.hasExtra(Constant.TASK_EXTRA)) {
 			mTask = data.getParcelableExtra(Constant.TASK_EXTRA);
@@ -95,6 +102,7 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 		case android.R.id.home:
 			NavUtils.navigateUpFromSameTask(this);
 			return true;
+		// Save task when save is pressed.
 		case R.id.action_save:
 			saveTask();
 			return true;
@@ -104,11 +112,19 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 	
 	
 	
+	/**
+	 * Initializes the UI with necessary listeners.
+	 */
 	private void setupUI() {
+		// Set a click listener on the entire screen. This is to make areas
+		//  outside child views clickable so that focus can be moved away from
+		//  the child views in question.
 		ScrollView container = (ScrollView) findViewById(R.id.container);
 		container.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				// If location text view is focused, 
+				//  remove 'keyboard' and focus.
 				if (mLocationText.isFocused()) {
 					InputMethodManager imm = (InputMethodManager) 
 							getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -151,6 +167,8 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 		// Set up the auto complete text view with listeners.
 		mLocationText = (AutoCompleteTextView) findViewById(R.id.location_text);
 		mLocationText.setText(mTask.getAddress());
+		// Create a new adapter for the AutoComplete text. Uses Google Places
+		//  API to find addresses.
 		mAutoCompleteAdapter = new PlacesAutoCompleteAdapter(this,
 				android.R.layout.simple_dropdown_item_1line);
 		mLocationText.setAdapter(mAutoCompleteAdapter);
@@ -158,10 +176,13 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 			@Override
 			public void onItemClick(AdapterView<?> adapterView, View view,
 					int position, long id) {
+				// Set task location when item in AutoComplete dropdown
+				//  is selected.
 				String location = (String) adapterView
 						.getItemAtPosition(position);
 				mLocationText.setText(location);
 				mTask.setAddress(location);
+				// Hide 'keyboard'.
 				InputMethodManager imm = (InputMethodManager) 
 						getSystemService(Context.INPUT_METHOD_SERVICE);
 				imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(),
@@ -169,11 +190,13 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 				mLocationText.clearFocus();
 			}
 		});
+		// Also provide a listener for when the user clicks outside the 
+		//  AutoComplete text, but has typed some location.
 		mLocationText.setOnFocusChangeListener(new OnFocusChangeListener() {
 			@Override
 			public void onFocusChange(View v, boolean hasFocus) {
 				if (! hasFocus) {
-					new GetLocationCoordinatesFromName().execute(
+					new GetLocationFromNameTask().execute(
 							mLocationText.getText().toString());
 				}
 			}
@@ -184,6 +207,7 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 		button.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
+				// Open map when user clicks the button.
 				Intent intent = new Intent(
 						TaskActivity.this, MapActivity.class);
 				if (mTask.getLatitude() != 0) {
@@ -202,6 +226,7 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 					boolean isChecked) {
 				Button fromButton = (Button) findViewById(R.id.from_button);
 				Button toButton = (Button) findViewById(R.id.to_button);
+				// If task has fixed times, enable buttons.
 				if (isChecked) {
 					fromButton.setEnabled(true);
 					toButton.setEnabled(true);
@@ -215,7 +240,9 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 			mFixedTime.setChecked(true);
 		}
 		
-		// Set behavior of the fixed time buttons
+		// Set behavior of the fixed time buttons.
+		// Create listener for the buttons. The listener uses a TimePicker
+		//  and is shared between both time buttons.
 		OnClickListener timeButtonListener = new OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -238,6 +265,11 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 	
 	
 	
+	/**
+	 * Checks that the user has entered some data into the required fields,
+	 *  and sends the task back to the calling Activity, where the task is
+	 *  saved to database (both internal and external).
+	 */
 	private void saveTask() {
 		
 		// Check if a location is chosen.
@@ -256,6 +288,8 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 						mTask.setFixedEnd(fixedEnd);
 					}
 				} else {
+					// Let user know that if 'fixed time' is checked, 
+					//  a time is required.
 					Toast.makeText(this, getString(R.string.set_time_message), 
 							Toast.LENGTH_LONG).show();
 					return;
@@ -279,6 +313,7 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 			finish();
 			
 		} else {
+			// Let user know that a location is required.
 			Toast.makeText(TaskActivity.this, getString(
 					R.string.set_location_message), Toast.LENGTH_LONG).show();
 		}
@@ -286,6 +321,10 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 	
 	
 	
+	/**
+	 *  Called from TimePickerFragment when a time has been selected.
+	 *   Updates the time text in the time boxes.
+	 */
 	@Override
 	public void onTimeSet(String time) {
 		mTimeButton.setText(time);
@@ -293,16 +332,21 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 	
 	
 	
+	/**
+	 * Handles the result from MapActivity.
+	 */
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, 
 			Intent data) {
 		if (requestCode == Constant.MAP_REQUEST) {
 			if (resultCode == RESULT_OK) {
+				// If it was a map request and the result was ok, save the
+				//  location and get the address.
 				LatLng location = data.getParcelableExtra(
 						Constant.LOCATION_EXTRA);
 				mTask.setLatitude(location.latitude);
 				mTask.setLongitude(location.longitude);
-				new GetLocationCoordinatesFromValue().execute(location);
+				new GetLocationFromValueTask().execute(location);
 			}
 		}
 		super.onActivityResult(requestCode, resultCode, data);
@@ -310,19 +354,28 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 	
 	
 	
-	private class GetLocationCoordinatesFromValue extends 
+	/**
+	 * Class that finds address from location coordinates.
+	 * Runs in the background as an AsyncTask.
+	 * @author LarsErik
+	 *
+	 */
+	private class GetLocationFromValueTask extends 
 			AsyncTask<LatLng, Void, String> {
 
 		@Override
 		protected String doInBackground(LatLng... params) {
 			LatLng location = params[0];
 			try {
+				// Get all available addresses from the coordinates.
 				List<Address> addresses = new Geocoder(getBaseContext())
 					.getFromLocation(location.latitude, location.longitude, 1);
 		
+				// If any address was found.
 				if (addresses.size() > 0) {
 					Address address = addresses.get(0);
 					String value = "";
+					// Loop through all address attributes.
 					for (int i = 0; i < address.getMaxAddressLineIndex(); i++) {
 						value += address.getAddressLine(i);
 						if (i < address.getMaxAddressLineIndex() -1) {
@@ -341,6 +394,7 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 		@Override
 		protected void onPostExecute(String result) {
 			if (result != null) {
+				// Set location of task when AsyncTask is finished.
 				mTask.setAddress(result);
 				mLocationText.setText(result);
 				//Button button = (Button) findViewById(R.id.location_button);
@@ -353,16 +407,25 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 	
 	
 	
-	private class GetLocationCoordinatesFromName extends 
+	/**
+	 * Class that finds coordinates in laitude and 
+	 * longitude from location address.
+	 * Runs in the background as an AsyncTask.
+	 * @author LarsErik
+	 *
+	 */
+	private class GetLocationFromNameTask extends 
 			AsyncTask<String, Void, LatLng> {
 
 		@Override
 		protected LatLng doInBackground(String... params) {
 			String value = params[0];
 			try {
+				// Get all addresses from the given value.
 				List<Address> addresses = new Geocoder(getBaseContext())
 						.getFromLocationName(value, 1);
 				if (addresses.size() > 0) {
+					// Get the coordinates of first (most likely one) address.
 					return new LatLng(addresses.get(0).getLatitude(),
 							addresses.get(0).getLongitude());
 				}
@@ -376,6 +439,7 @@ public class TaskActivity extends FragmentActivity implements OnTimeSetListener 
 		@Override
 		protected void onPostExecute(LatLng result) {
 			if (result != null) {
+				// Set task location when AsyncTask is finished.
 				mTask.setLatitude(result.latitude);
 				mTask.setLongitude(result.longitude);
 			}

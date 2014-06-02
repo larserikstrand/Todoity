@@ -8,6 +8,11 @@ import android.preference.Preference.OnPreferenceChangeListener;
 import android.preference.PreferenceActivity;
 
 
+/**
+ * Simple PreferenceActivity for viewing and editing preferences (settings).
+ * @author LarsErik
+ *
+ */
 @SuppressWarnings("deprecation")
 public class SettingsActivity extends PreferenceActivity {
 	
@@ -25,6 +30,7 @@ public static final String PREF_OCCUPATION_KEY = "pref_occupation";
 	
 	
 	private void setupUI() {
+		// Add summary (secondary text) to the occupation preference.
 		ListPreference pref = (ListPreference) findPreference(
 				PREF_OCCUPATION_KEY);
 		pref.setSummary(pref.getEntry());

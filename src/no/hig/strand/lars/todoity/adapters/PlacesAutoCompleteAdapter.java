@@ -87,6 +87,12 @@ public class PlacesAutoCompleteAdapter extends ArrayAdapter<String>
     
     
     
+    /**
+     * Takes a string as input, searches Google Places for matches, and
+     * returns these matches in an ArrayList of strings.
+     * @param input - The string to find matches for.
+     * @return ArrayList<String> - The list of matching places.
+     */
     public static ArrayList<String> autocomplete(String input) {
 	    ArrayList<String> resultList = null;
 	    HttpURLConnection conn = null;

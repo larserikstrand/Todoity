@@ -23,9 +23,17 @@ import android.support.v4.view.ViewPager;
 import android.view.Menu;
 import android.view.MenuItem;
 
+/**
+ * Entry point of the app. This Activity contains the logic for the ViewPager
+ *  that enables swiping between lists of tasks. Also handles the communication
+ *  between the fragments in the ViewPager.
+ * @author LarsErik
+ *
+ */
 public class MainActivity extends FragmentActivity implements 
 		OnTasksLoadedListener, OnDateSetListener {
 	
+	// Adapter containing the logic for swiping between fragments.
 	private TabsPagerAdapter mTabsPagerAdapter;
 	private ViewPager mViewPager;
 	//private TasksDb mTasksDb;
@@ -36,7 +44,7 @@ public class MainActivity extends FragmentActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         
-        // First launch.
+        // First launch: create an installation id and set default preferences.
         Installation.id(this);
         PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
         
@@ -91,6 +99,7 @@ public class MainActivity extends FragmentActivity implements
 
 
 	private void setupUI() {
+		// Apply tabs to action bar.
 		final ActionBar actionBar = getActionBar();
     	actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
     	
@@ -162,9 +171,14 @@ public class MainActivity extends FragmentActivity implements
 
 
 
+	/**
+	 *  Called from GetTasksByDateTask when tasks have been loaded from
+	 *   database. 
+	 */
 	@Override
 	public void onTasksLoaded(ArrayList<Task> tasks) {
 		Fragment fragment = mTabsPagerAdapter.getRegisteredFragment(0);
+		// Call update on TodayFragment if TodayFragment exists.
 		if (fragment instanceof TodayFragment) {
 			((TodayFragment) fragment).updateList(tasks);
 		}
@@ -172,6 +186,11 @@ public class MainActivity extends FragmentActivity implements
 
 
 
+	/**
+	 * Called when a date has been set in the date picker for the tasks.
+	 *  This function then calls onDateSet in the fragment that initiated
+	 *  the date change.
+	 */
 	@Override
 	public void onDateSet(String date, Fragment target, Bundle args) {
 		if (target instanceof TodayFragment) {

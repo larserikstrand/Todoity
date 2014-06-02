@@ -15,7 +15,7 @@ public class BootReceiver extends BroadcastReceiver {
 
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		// Check if there are active tasks.. if so, start context service.
+		// Check if there are active tasks. If so, start context service.
 		mTasksDb = TasksDatabase.getInstance(context);
 		ArrayList<Task> tasks = mTasksDb.getActiveTasks();
 		
